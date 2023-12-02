@@ -1,0 +1,14 @@
+<mujoco>
+    <worldbody>
+        <body pos='0 0 0'>
+            <geom type='box' size='0.0027 0.006954999999999999 0.0005' rgba='0 0.5 0 1'/>
+
+            <body pos='0.001065 0.00237 0.0005' name='r-top'>
+                <geom type='cylinder' size='0.00075 0.0005'/>
+            </body>
+            <body pos='-0.001065 0.00237 0.0005' name='l-top'>
+                <geom type='cylinder' size='0.00075 0.0005'/>
+            </body>
+        </body>
+    </worldbody>
+</mujoco>

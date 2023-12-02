@@ -1,0 +1,30 @@
+Fri Dec  1 11:49:25 2023
+ERROR: could not initialize GLFW
+
+Fri Dec  1 11:49:35 2023
+ERROR: could not initialize GLFW
+
+Fri Dec  1 12:14:37 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 12:35:47 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 12:35:58 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 12:53:12 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 16:59:44 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 17:12:53 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 17:15:24 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 17:15:45 2023
+ERROR: mjv_updateSceneState: m->nu changed
+

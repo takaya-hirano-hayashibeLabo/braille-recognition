@@ -1,0 +1,63 @@
+Fri Dec  1 17:46:58 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 18:08:14 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 19:53:49 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:00:04 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:00:44 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:01:48 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:07:14 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:07:27 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:08:17 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:11:29 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:15:08 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:28:06 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:29:44 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:30:16 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:36:22 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:37:23 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:38:50 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:42:20 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 20:42:40 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 21:50:44 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+
+Fri Dec  1 21:57:18 2023
+ERROR: mjv_updateSceneState: m->nbody changed
+

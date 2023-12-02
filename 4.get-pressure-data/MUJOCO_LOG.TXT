@@ -1,0 +1,21 @@
+Wed Nov 22 08:43:13 2023
+ERROR: mjv_updateCamera: track body id is outside valid range
+
+Fri Nov 24 07:13:55 2023
+ERROR: could not initialize GLFW
+
+Fri Dec  1 09:41:07 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 09:43:22 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 09:44:33 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 09:47:07 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Fri Dec  1 10:52:54 2023
+WARNING: Nan, Inf or huge value in QACC at DOF 3. The simulation is unstable. Time = 12.4340.
+

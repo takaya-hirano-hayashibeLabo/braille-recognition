@@ -1,0 +1,12 @@
+Mon Nov 20 06:45:02 2023
+ERROR: could not initialize GLFW
+
+Mon Nov 20 09:38:51 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Mon Nov 20 09:42:24 2023
+ERROR: mjv_updateSceneState: m->nu changed
+
+Thu Nov 30 10:54:34 2023
+ERROR: could not initialize GLFW
+
