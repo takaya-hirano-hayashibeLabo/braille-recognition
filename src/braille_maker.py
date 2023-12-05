@@ -24,7 +24,7 @@ z=0.5* 10**-3
 c=3.27/2 * 10**-3
 
 BRAILLE_BODY="""<!--{NAME}.xml-->
-<body pos='0 0 0' name='{NAME}'>
+<body pos='{X} 0 0'>
     <geom type='box' size='{XYZ}' rgba='0 0.5 0 1'/>
     {DOT_BODIES}
 </body>"""
@@ -61,7 +61,7 @@ class BrailleMaker():
             f.write(dot_body)
             
     
-    def make_braille_body(self,name='a',dot_pos='100000'):
+    def make_braille_body(self,name='a',dot_pos_list=['100000']):
         """
         名前とドット位置を指定して,点字bodyを作成する関数
         :param name: 点字の名前. ローマ字.  
@@ -69,41 +69,53 @@ class BrailleMaker():
                         0(head bit):left-top, 1:left-center, 2:left-bottom,  
                         3:right-top, 4:right-center, 5(tail-bit):right-bottom'
         """
+        
+        braille_num=len(dot_pos_list)
+        braille_x=0
+        braille_bodies=[]
     
-        # この中のdot_existをTrueにするとポチができる。Falseにするとポチが消える。
-        brailles_param:dict={
-            'l-top'   :{'pos':[-b,l,z], 'size':[r,z], 'dot_exist':True},
-            'l-center':{'pos':[-b,0,z], 'size':[r,z], 'dot_exist':True},
-            'l-bottom':{'pos':[-b,-l,z],'size':[r,z], 'dot_exist':False},
-            'r-top'   :{'pos':[b,l,z],  'size':[r,z], 'dot_exist':False},
-            'r-center':{'pos':[b,0,z],  'size':[r,z], 'dot_exist':True},
-            'r-bottom':{'pos':[b,-l,z], 'size':[r,z], 'dot_exist':False},
-        }
-        
-        # >> dotの位置を引数で指定 >>
-        for is_dot,key in zip(list(dot_pos),brailles_param.keys()):
-            brailles_param[key]['dot_exist']=True if is_dot=='1' else False
-        # >> dotの位置を引数で指定 >>
-        
-        
-        with open(f"{PARENT}/assets/detail_dot.xml","r") as f:
-            dot_body="".join(f.readlines())
-        dot_bodies=""
-        for key,val in brailles_param.items():    
-            if not val['dot_exist']:
-                continue
-            dot_body_i=re.sub('{NAME}',f"{key}",dot_body)
-            dot_body_i=re.sub('{XY}',f"{val['pos'][0]} {val['pos'][1]}",dot_body_i)
-            dot_bodies+=dot_body_i+'\n'
+        for i in range(braille_num):
+            # この中のdot_existをTrueにするとポチができる。Falseにするとポチが消える。
+            brailles_param:dict={
+                'l-top'   :{'pos':[-b,l,z], 'size':[r,z], 'dot_exist':True},
+                'l-center':{'pos':[-b,0,z], 'size':[r,z], 'dot_exist':True},
+                'l-bottom':{'pos':[-b,-l,z],'size':[r,z], 'dot_exist':False},
+                'r-top'   :{'pos':[b,l,z],  'size':[r,z], 'dot_exist':False},
+                'r-center':{'pos':[b,0,z],  'size':[r,z], 'dot_exist':True},
+                'r-bottom':{'pos':[b,-l,z], 'size':[r,z], 'dot_exist':False},
+            }
+            
+            # >> dotの位置を引数で指定 >>
+            for is_dot,key in zip(list(dot_pos_list[i]),brailles_param.keys()):
+                brailles_param[key]['dot_exist']=True if is_dot=='1' else False
+            # >> dotの位置を引数で指定 >>
             
             
-        body_xml=re.sub("{NAME}",f"{name}",BRAILLE_BODY)
-        body_x,body_y,body_z=2*(b+c), 2*(l+h), z
-        body_xml=re.sub(
-            "{XYZ}",f"{body_x} {body_y} {body_z}",
-            body_xml
-        )
-        body_xml=re.sub('{DOT_BODIES}',dot_bodies,body_xml)
+            with open(f"{PARENT}/assets/detail_dot.xml","r") as f:
+                dot_body="".join(f.readlines())
+            dot_bodies=""
+            for key,val in brailles_param.items():    
+                if not val['dot_exist']:
+                    continue
+                dot_body_j=re.sub('{NAME}',f"{key}",dot_body)
+                dot_body_j=re.sub('{XY}',f"{val['pos'][0]} {val['pos'][1]}",dot_body_j)
+                dot_bodies+=dot_body_j+'\n'
+                
+                
+            # body_xml_i=re.sub("{NAME}",f"{name}",BRAILLE_BODY)
+            body_xml_i=re.sub("{X}",f"{braille_x}",BRAILLE_BODY)
+            body_x,body_y,body_z=2*(b+c), 2*(l+h), z*1e-3
+            body_xml_i=re.sub(
+                "{XYZ}",f"{body_x} {body_y} {body_z}",
+                body_xml_i
+            )
+            body_xml_i=re.sub('{DOT_BODIES}',dot_bodies,body_xml_i)
+            braille_bodies.append(body_xml_i)
+            
+            braille_x+=(c+b)*2 #横にずらす
+            
+            
+        body_xml="\n".join(braille_bodies) #xmlを全結合
         
         
         with open(f"{PARENT}/assets/{name}.xml","w") as f:
@@ -115,4 +127,4 @@ if __name__=="__main__":
     """
     braille_maker=BrailleMaker()
     braille_maker.raise_dot_resolution(N=240)
-    braille_maker.make_braille_body(name='e',dot_pos='110100')
+    braille_maker.make_braille_body(name='1',dot_pos_list=['001111','100000'])
