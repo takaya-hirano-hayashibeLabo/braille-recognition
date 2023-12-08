@@ -1,2 +1,5 @@
 *.obj
 core
+*.mp4
+*.gif
+*.npy

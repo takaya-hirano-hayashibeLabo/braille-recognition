@@ -4,6 +4,8 @@ PARENT=str(Path(__file__).parent)
 import numpy as np
 import re
 
+import os
+
 
 MINI_DOT_GEOM="""<geom type='cylinder' size='{R} 0.0005' pos='{XY} 0'/>\n"""
 
@@ -56,10 +58,10 @@ class BrailleMaker():
         dot_body=re.sub("{MINI_DOTS}",f"{mini_dots}",DOT_BODY)
         
         dot_body=re.sub('{N}',f"{N}",dot_body)
-        
-        with open(f"{PARENT}/assets/detail_dot.xml","w") as f:
+                
+        with open(f"{PARENT}/assets/braille-xml/detail_dot.xml","w") as f:
             f.write(dot_body)
-            
+        
     
     def make_braille_body(self,name='a',dot_pos_list=['100000']):
         """
@@ -70,20 +72,23 @@ class BrailleMaker():
                         3:right-top, 4:right-center, 5(tail-bit):right-bottom'
         """
         
+        # print(dot_pos_list)
+        
         braille_num=len(dot_pos_list)
         braille_x=0
         braille_bodies=[]
+        
+        # この中のdot_existをTrueにするとポチができる。Falseにするとポチが消える。
+        brailles_param:dict={
+            'l-top'   :{'pos':[-b,l,z], 'size':[r,z], 'dot_exist':True},
+            'l-center':{'pos':[-b,0,z], 'size':[r,z], 'dot_exist':True},
+            'l-bottom':{'pos':[-b,-l,z],'size':[r,z], 'dot_exist':False},
+            'r-top'   :{'pos':[b,l,z],  'size':[r,z], 'dot_exist':False},
+            'r-center':{'pos':[b,0,z],  'size':[r,z], 'dot_exist':True},
+            'r-bottom':{'pos':[b,-l,z], 'size':[r,z], 'dot_exist':False},
+        }
     
-        for i in range(braille_num):
-            # この中のdot_existをTrueにするとポチができる。Falseにするとポチが消える。
-            brailles_param:dict={
-                'l-top'   :{'pos':[-b,l,z], 'size':[r,z], 'dot_exist':True},
-                'l-center':{'pos':[-b,0,z], 'size':[r,z], 'dot_exist':True},
-                'l-bottom':{'pos':[-b,-l,z],'size':[r,z], 'dot_exist':False},
-                'r-top'   :{'pos':[b,l,z],  'size':[r,z], 'dot_exist':False},
-                'r-center':{'pos':[b,0,z],  'size':[r,z], 'dot_exist':True},
-                'r-bottom':{'pos':[b,-l,z], 'size':[r,z], 'dot_exist':False},
-            }
+        for i in range(braille_num):            
             
             # >> dotの位置を引数で指定 >>
             for is_dot,key in zip(list(dot_pos_list[i]),brailles_param.keys()):
@@ -91,13 +96,13 @@ class BrailleMaker():
             # >> dotの位置を引数で指定 >>
             
             
-            with open(f"{PARENT}/assets/detail_dot.xml","r") as f:
+            with open(f"{PARENT}/assets/braille-xml/detail_dot.xml","r") as f:
                 dot_body="".join(f.readlines())
             dot_bodies=""
             for key,val in brailles_param.items():    
                 if not val['dot_exist']:
                     continue
-                dot_body_j=re.sub('{NAME}',f"{key}",dot_body)
+                dot_body_j=re.sub('{NAME}',f"{key}.{i}",dot_body)
                 dot_body_j=re.sub('{XY}',f"{val['pos'][0]} {val['pos'][1]}",dot_body_j)
                 dot_bodies+=dot_body_j+'\n'
                 
@@ -116,9 +121,12 @@ class BrailleMaker():
             
             
         body_xml="\n".join(braille_bodies) #xmlを全結合
+        body_xml=f"""<body pos='0 0 0'>
+        {body_xml}
+        </body>"""
         
         
-        with open(f"{PARENT}/assets/{name}.xml","w") as f:
+        with open(f"{PARENT}/assets/braille-xml/{name}.xml","w") as f:
             f.write(body_xml)
         
 if __name__=="__main__":
@@ -127,4 +135,4 @@ if __name__=="__main__":
     """
     braille_maker=BrailleMaker()
     braille_maker.raise_dot_resolution(N=240)
-    braille_maker.make_braille_body(name='1',dot_pos_list=['001111','100000'])
+    braille_maker.make_braille_body(name='0',dot_pos_list=['001111','010110'])
