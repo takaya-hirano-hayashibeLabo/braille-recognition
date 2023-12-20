@@ -3,3 +3,6 @@ core
 *.mp4
 *.gif
 *.npy
+*.pth
+*.png
+*.csv

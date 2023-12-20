@@ -4,9 +4,16 @@ import os
 
 import numpy as np
 import re
-
+import argparse
 
 def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--dot_shape",default="default",
+                        type=str,help="dot_shape:{'default', 'sloped'}"
+                        )
+    args=parser.parse_args()
+    
+    dot_shape=args.dot_shape
     
     #>> simulationでとったデータのうち, この範囲内のデータを２次元データ（画像like）として保存>>
     time_start=8.4
@@ -16,11 +23,15 @@ def main():
     input_2d=[]
     label=[]
     
-    save_dir=f"{PARENT}/data2d"
+    if dot_shape=="default":
+        save_dir=f"{PARENT}/data2d"
+        org_data_dir=f"{PARENT}/data"
+    elif dot_shape=="sloped":
+        save_dir=f"{PARENT}/data2d-sloped"
+        org_data_dir=f"{PARENT}/data-sloped"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
         
-    org_data_dir=f"{PARENT}/data"
     for file in os.listdir(org_data_dir):
         if not "npy" in file:
             continue

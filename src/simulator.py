@@ -26,24 +26,31 @@ class Simulator():
             self.braille_name=""
                 
     
-    def laod_braille_body(self,braille_name='a'):
+    def laod_braille_body(self,braille_name='a',dot_shape="default"):
         """
         点字bodyをシミュレーション環境xmlに読み込む
         :param braille_name:読み込む点字のローマ字名
+        :param dot_shape: ドットの形状. {default:通常の高さが均一なドット. sloped:左側がスロープ上になったドット}
         """
         
         self.braille_name=braille_name
         
         #>> 点字bodyを読み込んで, 位置と回転を合わせる >>
-        with open(f"{PARENT}/assets/braille-xml/{braille_name}.xml", "r") as f:
-            braille_body=f.readlines()
+        if dot_shape=="default":
+            with open(f"{PARENT}/assets/braille-xml/{braille_name}.xml", "r") as f:
+                braille_body=f.readlines()
+        elif dot_shape=="sloped":
+            with open(f"{PARENT}/assets/braille-xml-sloped/{braille_name}.xml", "r") as f:
+                braille_body=f.readlines()
+                
         for i,line in enumerate(braille_body):
             if "!" in line:
                 continue
             top_line=line
             idx_top=i
             break
-        braille_body[idx_top]=re.sub("pos='0 0 0'", "pos='0.033 -0.425 -0.144'  axisangle='0 0 1 3.14'", top_line)
+        braille_body[idx_top]=re.sub("pos='0 0 0'", "pos='0.033 -0.425 -0.144'  axisangle='0 0 1 3.14'", top_line) #defaultバージョン
+        # braille_body[idx_top]=re.sub("pos='0 0 0'", "pos='0.033 -0.425 -0.1447'  axisangle='0 0 1 3.14'", top_line) #slopedバージョン
         braille_body="".join(braille_body)
         braille_body=re.sub(
             "geom ",
