@@ -48,7 +48,8 @@ def main():
     transform=DataTransformStd()
     input_data_nrm,_,_=transform(input_data,data_shape)
     
-    # plt.imshow(input_data_nrm.to("cpu")[300][0])
+    # print(input_data.shape)
+    # plt.imshow(np.fliplr(input_data_nrm.to("cpu")[300][0]))
     # plt.show()
     # exit(1)
     # >> データのリサイズと標準化 >>
@@ -64,7 +65,7 @@ def main():
         y=torch.Tensor(label_data)[shuffle_idx[:train_size]].type(torch.float32)
         )
     test_dataset=Datasets(
-        x=input_data_nrm[shuffle_idx[train_size:]]*1,
+        x=input_data_nrm[shuffle_idx[train_size:]]*1/24,
         y=torch.Tensor(label_data)[shuffle_idx[train_size:]].type(torch.float32)
         )
     

@@ -124,6 +124,7 @@ class Simulator():
                     pressure_map=np.array(raw_data).reshape(sensor_row,sensor_col)
                     
                     pressure_data.append(pressure_map) #deepcopyしないと参照になる
+                    print(np.max(pressure_data))
                     
                     viewer.sync()
                     

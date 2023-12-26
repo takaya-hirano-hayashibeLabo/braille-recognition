@@ -221,7 +221,7 @@ class SNN(nn.Module):
                 acc += SF.accuracy_rate(spk_rec, targets) * spk_rec.shape[1]
                 total += spk_rec.shape[1]
                 
-            # print(torch.sum(spk_rec,dim=0))
+            print(torch.sum(spk_rec,dim=0))
             # print(targets)
 
         return acc/total
