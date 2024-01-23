@@ -6,3 +6,4 @@ core
 *.pth
 *.png
 *.csv
+__pycache__
