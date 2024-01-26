@@ -2,6 +2,7 @@
 SNN版
 ２次元のフレーム一枚一枚を次元削減するネットワーク
 """
+import sys
 
 import torch
 from torch import nn
@@ -32,12 +33,23 @@ class InceptionV2SNN(nn.Module):
         
         for t in range(x.shape[0]):
 
+            print(f"[basic] before : {torch.cuda.memory_allocated()/(1024**3)} G")
+            print(f"var size : {sys.getsizeof(x[t])/10e9} G")
             out = self.basic_conv(x[t])
+            print(f"[inception_a]before : {torch.cuda.memory_allocated()/(1024**3)} G")
+            print(f"var size : {sys.getsizeof(out)/10e9} G")
             out = self.inception_a(out)
+            print(f"[inception_b]before : {torch.cuda.memory_allocated()/(1024**3)} G")
+            print(f"var size : {sys.getsizeof(out)/10e9} G")
             out = self.inception_b(out)
+            print(f"[inception_c]before : {torch.cuda.memory_allocated()/(1024**3)} G")
+            print(f"var size : {sys.getsizeof(out)/10e9} G")
             out = self.inception_c(out)
             out_sp.append(out)
-            
+
+            print(f"[inception_v2]after : {torch.cuda.memory_allocated()/(1024**3)} G")
+            print(f"var size : {sys.getsizeof(out)/10e9} G")
+        
         return torch.stack(out_sp)
 
 

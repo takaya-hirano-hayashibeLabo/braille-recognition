@@ -91,7 +91,6 @@ class ECOSNN(nn.Module):
         print(f"after : {torch.cuda.memory_allocated()/(1024**3)} G")
         print("="*50)
 
-
         print("[ResNet]")
         print(f"before : {torch.cuda.memory_allocated()/(1024**3)} G")
         out=torch.transpose(out,dim0=2,dim1=3) #時間軸とchannel軸をいれかえる
