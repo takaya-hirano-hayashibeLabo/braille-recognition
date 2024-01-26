@@ -25,8 +25,8 @@ def main():
         in input_3d[10]
     ]
     ani=arani(fig,frames,interval=500)
-    # plt.show()
-    ani.save(f"{PARENT}/timestep{TIMESTEP}_timesequence{TIME_SEQUENCE}_skipframe{SKIP_FRAME}.mp4",writer="ffmpeg")
+    plt.show()
+    # ani.save(f"{PARENT}/timestep{TIMESTEP}_timesequence{TIME_SEQUENCE}_skipframe{SKIP_FRAME}.mp4",writer="ffmpeg")
 
 
 if __name__=="__main__":

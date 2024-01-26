@@ -11,7 +11,7 @@ from .resnet3D_snn import ResNetSNN3D
 class ECO(nn.Module):
 
     def __init__(self):
-        super(self,ECO).__init__()
+        super().__init__()
         self.inception_v2=InceptionV2()
         self.resnet3d=ResNet3D()
         self.out_layer=nn.Linear(
@@ -29,9 +29,15 @@ class ECO(nn.Module):
         out:torch.Tensor=self.inception_v2(x) #n*t x c x h x w
         _,c_out,h_out,w_out=out.shape
         out=out.view(n,t,c_out,h_out,w_out) #時系列を復活させる
+        
 
+
+        print("[ResNet]")
+        print(f"{torch.cuda.memory_allocated()/(1024**3)} G")
         out=torch.transpose(out,dim0=1,dim1=2) #時間軸とchannel軸をいれかえる
         out=self.resnet3d(out)
+        print(f"{torch.cuda.memory_allocated()/(1024**3)} G")
+        print("="*50)
 
         out=self.out_layer(out)
 
@@ -40,7 +46,7 @@ class ECO(nn.Module):
 
 class ECOSNN(nn.Module):
     def __init__(self,snn_time_step=30):
-        super(self,ECOSNN).__init__()
+        super().__init__()
 
         self.snn_time_step=snn_time_step
         
@@ -77,13 +83,22 @@ class ECOSNN(nn.Module):
 
         out=self.encode(x) #[snn_time_step x n*t x c h x w] snnの時間方向を引き伸ばす
 
-        out:torch.Tensor=self.inception_v2(x) #[snn_time_step x n*t x c x h x w]
+        print("[inception-v2]")
+        print(f"before : {torch.cuda.memory_allocated()/(1024**3)} G")
+        out:torch.Tensor=self.inception_v2(out) #[snn_time_step x n*t x c x h x w]
         _,_,c_out,h_out,w_out=out.shape
         out=out.view(self.snn_time_step,n,t,c_out,h_out,w_out) #時系列を復活させる
+        print(f"after : {torch.cuda.memory_allocated()/(1024**3)} G")
+        print("="*50)
 
+
+        print("[ResNet]")
+        print(f"before : {torch.cuda.memory_allocated()/(1024**3)} G")
         out=torch.transpose(out,dim0=2,dim1=3) #時間軸とchannel軸をいれかえる
         out=self.resnet3d(out)
+        print(f"after : {torch.cuda.memory_allocated()/(1024**3)} G")
+        print("="*50)
 
-        out=self.out_layer(out)
+        out,out_mem=self.out_layer(out)
 
         return out

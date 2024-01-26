@@ -182,7 +182,8 @@ class Simulator():
             frame_i=[[ax.imshow(np.fliplr(pressure_data[t]))]+[ax.text(np.array(pressure_data).shape[1]*0.5,-1,s=f'elapesd_time:{model.opt.timestep*t}')]]
             frames+=frame_i
         ani=ArtistAnimation(fig,frames,interval=round(1000/fps))
-        ani.save(f'{save_dir}/{self.braille_name}_timestep{model.opt.timestep}.mp4',writer="ffmpeg")
+        # ani.save(f'{save_dir}/{self.braille_name}_timestep{model.opt.timestep}.mp4',writer="ffmpeg")
+        ani.save(f'{save_dir}/{self.braille_name}_timestep{model.opt.timestep}.mp4')
         plt.close()
         # plt.show()
         #>> マップに描画 >>

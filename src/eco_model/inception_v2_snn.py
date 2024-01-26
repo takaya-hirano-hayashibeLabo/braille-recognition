@@ -31,6 +31,7 @@ class InceptionV2SNN(nn.Module):
         out_sp=[]
         
         for t in range(x.shape[0]):
+
             out = self.basic_conv(x[t])
             out = self.inception_a(out)
             out = self.inception_b(out)

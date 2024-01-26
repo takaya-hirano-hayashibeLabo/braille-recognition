@@ -1,0 +1,9 @@
+Fri Jan 26 15:52:45 2024
+ERROR: OpenGL version 1.5 or higher required
+
+Fri Jan 26 15:55:06 2024
+ERROR: OpenGL version 1.5 or higher required
+
+Fri Jan 26 16:03:26 2024
+ERROR: OpenGL version 1.5 or higher required
+

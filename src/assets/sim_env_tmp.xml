@@ -101,11 +101,11 @@
 
   <worldbody>
 
-    <!-- ° -->
+    <!-- åºŠ -->
     <geom name="floor" pos="0 0 -0.15" type="plane" size="1 1 .01" rgba='0.812 0.890 0.773 1.0'/>
-    <!-- ° -->
+    <!-- åºŠ -->
 
-    <!-- “_Žš -->
+    <!-- ç‚¹å­— -->
     <!-- <body pos='0.033 -0.426 -0.144' axisangle='0 0 1 3.14'>
       <geom contype='2' conaffinity='2' type='box' size='0.0054 0.013909999999999999 0.0005' rgba='0 0.5 0 1' pos='0 0 -0.0005'/>      
     </body> -->
@@ -1573,7 +1573,7 @@
 
 </body>
         </body>
-    <!-- “_Žš -->
+    <!-- ç‚¹å­— -->
 
     <body name="rh_forearm" childclass="right_hand" axisangle='1 0 0 1.57' pos='0 0 -0.1'>
 
@@ -1609,7 +1609,7 @@
           <geom size="0.009 0.012 0.002" pos="0.011 0 0.089" type="box" class="plastic_collision"/>
           <geom size="0.01 0.012 0.02" pos="-0.03 0 0.009" type="box" class="plastic_collision"/>
 
-          <!-- l·‚µŽw -->
+          <!-- äººå·®ã—æŒ‡ -->
           <body name="rh_ffknuckle" pos="0.033 0 0.095">
             <inertial mass="0.008" pos="0 0 0" quat="0.5 0.5 -0.5 0.5" diaginertia="3.2e-07 2.6e-07 2.6e-07"/>
             <joint name="rh_FFJ4" class="knuckle"/>
@@ -1631,13 +1631,13 @@
                   <geom margin='0.0007' contype='2' conaffinity='2' rgba='0.996 0.863 0.741 0.5' class="plastic_visual" mesh="f_distal_pst"/>
                   <geom margin='0.0007' contype='2' conaffinity='2' rgba='0.996 0.863 0.741 0.5' class="plastic_collision" type="mesh" mesh="f_distal_pst"/>
 
-                  <!-- site‚ÌŒü‚«‚ÍŽ€‚Ê‚Ù‚Ç‘åŽ– -->
+                  <!-- siteã®å‘ãã¯æ­»ã¬ã»ã©å¤§äº‹ -->
                   <site name="touch" pos="0 0.006 0.015" rgba='1 0 0 0.5' euler="-1.57 0 0" size='0.002 0.002 0.002'/>
-                  <!-- site‚ÌŒü‚«‚ÍŽ€‚Ê‚Ù‚Ç‘åŽ– -->
+                  <!-- siteã®å‘ãã¯æ­»ã¬ã»ã©å¤§äº‹ -->
                 </body>
               </body>
             </body>
-            <!-- l·‚µŽw -->
+            <!-- äººå·®ã—æŒ‡ -->
           </body>
 
           <body name="rh_mfknuckle" pos="0.011 0 0.099">

@@ -1,6 +1,6 @@
 from pathlib import Path
 PARENT=Path(__file__).parent
-ROOT=PARENT.parent
+ROOT=PARENT.parent.parent
 import sys
 sys.path.append(str(ROOT))
 import os
@@ -22,6 +22,10 @@ from snntorch import utils
 from snntorch import spikeplot as splt
 
 import matplotlib.pyplot as plt
+
+import gc
+
+from src import ECO,ECOSNN
 
 
 class Datasets(torch.utils.data.Dataset):
@@ -89,142 +93,32 @@ class DataTransformNrm():
         
         return data_nrm,max,min
 
-class CNN(nn.Module):
-    def __init__(self):
-        super(CNN,self).__init__()
+
+def batch_accuracy(net:nn.Module,net_type:str,data_loader):
+    with torch.no_grad():
+        total=0
+        acc=0
+        net.eval()
         
-        # >> 画像サイズが28x28 >>
-        # self.net=nn.Sequential(nn.Conv2d(1, 12, 5),
-        #     nn.MaxPool2d(2),
-        #     nn.ReLU(),
-        #     nn.Conv2d(12, 64, 5),
-        #     nn.MaxPool2d(2),
-        #     nn.ReLU(),
-        #     nn.Flatten(),
-        #     nn.Linear(64*4*4, 10),
-        #     )
-        
-        # >> 画像サイズが64x64 >>
-        self.net=nn.Sequential(
-            nn.Conv2d(1, 4, 5),
-            nn.MaxPool2d(2),
-            nn.ReLU(),
-            nn.Conv2d(4, 8, 5),
-            nn.MaxPool2d(2),
-            nn.ReLU(),
-            nn.Conv2d(8, 16, 4),
-            nn.MaxPool2d(2),
-            nn.ReLU(),
-            nn.Flatten(),
-            nn.Linear(5*5*16, 10),
-            )
-        
-    def forward(self,x):
-        return self.net(x)
-    
-    def batch_accuracy(self,data_loader):
-        with torch.no_grad():
-            total=0
-            acc=0
-            self.net.eval()
+        for data, targets in data_loader:
             
-            for data, targets in data_loader:
-                out= self.forward(data)
+            out:torch.Tensor= net(data)
+
+            if net_type.casefold()=="nn":
                 est_class=torch.argmax(out,dim=1) #選択されたクラス
-                
                 acc+=torch.sum(est_class==targets) #同じならTrueで１が合算される
-
                 total += out.shape[0]
-                
+
+            elif net_type.casefold()=="snn":
+                acc += SF.accuracy_rate(out, targets) * out.shape[1]
+                total += out.shape[1]
+
+            else:
+                print("net_type error @fn:batch_accuracy")
+                exit(1)
                 
         return acc/total
-    
-class SNN(nn.Module):
-    def __init__(self,num_steps=16,beta=0.5,spike_grad=surrogate.fast_sigmoid(slope=25)):
-        super().__init__()
-        
-        self.num_steps=num_steps
-        
-        # >> 画像サイズが28x28 >>
-        # self.net = nn.Sequential(nn.Conv2d(1, 12, 5),
-        #     nn.MaxPool2d(2),
-        #     snn.Leaky(beta=beta, spike_grad=spike_grad, init_hidden=True),
-        #     nn.Conv2d(12, 64, 5),
-        #     nn.MaxPool2d(2),
-        #     snn.Leaky(beta=beta, spike_grad=spike_grad, init_hidden=True),
-        #     nn.Flatten(),
-        #     nn.Linear(64*4*4, 10),
-        #     snn.Leaky(beta=beta, spike_grad=spike_grad, init_hidden=True, output=True)
-        #     )
-        # >> 画像サイズが28x28 >>
-        
-        
-        # >> 画像サイズが64x64 >>
-        self.net=nn.Sequential(
-            nn.Conv2d(1, 4, 5),
-            nn.MaxPool2d(2),
-            snn.Leaky(beta=beta, spike_grad=spike_grad, init_hidden=True),
-            nn.Conv2d(4, 8, 5),
-            nn.MaxPool2d(2),
-            snn.Leaky(beta=beta, spike_grad=spike_grad, init_hidden=True),
-            nn.Conv2d(8, 16, 4),
-            nn.MaxPool2d(2),
-            snn.Leaky(beta=beta, spike_grad=spike_grad, init_hidden=True),
-            nn.Flatten(),
-            nn.Linear(5*5*16,10),
-            snn.Leaky(beta=beta, spike_grad=spike_grad, init_hidden=True, output=True),
-            )
-        # >> 画像サイズが64x64 >>
-        
-        
-    def poisson_encoder(self,x):
-        """
-        poissonEncは微妙.あんまり学習が上手くできない.(70~80%くらいしか行かない…)
-        :param x:[bathc_size x channel x height x width]
-        :return poisson_spikes:[T x bathc_size x channel x height x width]
-        """
-        
-        poisson_spikes=[torch.where(
-            torch.rand(size=x.shape)<=x,
-            1,
-            0
-        ) for _ in range(self.num_steps)]
-        
-        return torch.stack(poisson_spikes).type(torch.float)
-        
-    def forward(self,x):
-        """
-        :param x : [batch_size x channel x height x width]
-        :return spikes : [T x batch_size x channel x height x width]
-        """
-        mem_rec = []
-        spikes = []
-        utils.reset(self.net)  # resets hidden states for all LIF neurons in net
-        
-        # x=self.poisson_encoder(x=x) #poisson encoderでスパイク変換
 
-        for step in range(self.num_steps):
-            spk_out, mem_out = self.net(x)#[step])
-            spikes.append(spk_out)
-            mem_rec.append(mem_out)
-        
-        return torch.stack(spikes)#, torch.stack(mem_rec)
-    
-    def batch_accuracy(self,data_loader):
-        with torch.no_grad():
-            total = 0
-            acc = 0
-            self.net.eval()
-            
-            for data, targets in data_loader:
-                spk_rec= self.forward(data)
-                acc += SF.accuracy_rate(spk_rec, targets) * spk_rec.shape[1]
-                total += spk_rec.shape[1]
-                
-            print(torch.sum(spk_rec,dim=0))
-            # print(targets)
-
-        return acc/total
 
 def main():
     
@@ -233,15 +127,17 @@ def main():
     parser.add_argument("--save_dir",default=f"{PARENT}",type=str)
     args=parser.parse_args()
     
-    data_dir=f"{ROOT}/data_collection/data2d"
-    input_data:np.ndarray=np.load(f"{data_dir}/input_2d.npy")
-    input_data=input_data[:,np.newaxis,:,:] #channel方向に次元を伸ばす
+    data_dir=f"{ROOT}/main/data_collection/data3d"
+    input_data:np.ndarray=np.load(f"{data_dir}/input_3d.npy")
+    input_data=input_data[:,:,np.newaxis,:,:] #channel方向に次元を伸ばす
     label_data:np.ndarray=np.load(f"{data_dir}/label.npy").astype(int)
 
     # >> データのリサイズと標準化 >>
     data_size=(64,64) #28, 64
     transform=DataTransformStd()
-    input_data_nrm,mean,std=transform(input_data,data_size)
+    n,t,c,h,w=input_data.shape
+    input_data_nrm,mean,std=transform(input_data.reshape(n*t,c,h,w),data_size)
+    input_data_nrm=input_data_nrm.view(n,t,c,data_size[0],data_size[1])
     # >> データのリサイズと標準化 >>
     
     #>> データのシャッフルと分割 >>
@@ -259,24 +155,24 @@ def main():
         y=torch.Tensor(label_data)[shuffle_idx[train_size:]].type(torch.float32)
         )
     
-    batch_size=32
+    batch_size=16
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True,generator=torch.Generator(device=torch.Tensor([0,0]).device))
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True  ,generator=torch.Generator(device=torch.Tensor([0,0]).device))
     #>> データのシャッフルと分割 >>
     
     #>> ネットワークの設定 >>
     if args.net_type=="nn".casefold():
-        net=CNN()
+        net=ECO()
         criterion=torch.nn.CrossEntropyLoss()
     elif args.net_type=="snn".casefold():
-        net=SNN(num_steps=24)
+        net=ECOSNN(snn_time_step=16)
         criterion=SF.ce_rate_loss()
     else:
         print("net_type error")
         exit(1)
         
         
-    optimizer=torch.optim.Adam(net.parameters(),lr=1e-2)
+    optimizer=torch.optim.Adam(net.parameters(),lr=1e-3)
     optimizer.param_groups[0]["capturable"]=True
     num_epochs = 10
     loss_hist = []
@@ -294,13 +190,22 @@ def main():
             out = net.forward(data)
 
             # initialize the loss & sum over time
-            loss_val = criterion(out, targets.type(torch.long))
+            loss_val:torch.Tensor = criterion(out, targets.type(torch.long))
 
             # Gradient calculation + weight update
-            optimizer.zero_grad()
-            loss_val.backward()
-            optimizer.step()
 
+            # print(f"{torch.cuda.memory_allocated()/(1024**3)} G")
+            
+            # print("t"*50)
+            loss_val.backward(retain_graph=True)
+            # print("a"*50)
+            optimizer.step()
+            # print("b"*50)
+            optimizer.zero_grad()
+            # print("C"*50)
+
+            gc.collect()
+            
             # Store loss history for future plotting
             loss_hist.append(loss_val.item())
 
@@ -310,10 +215,16 @@ def main():
                     net.eval()
                     
                     # Train acc
-                    train_acc=net.batch_accuracy(train_loader)
+                    train_acc=batch_accuracy(
+                        net=net,net_type=args.net_type,
+                        data_loader=train_loader
+                    )
 
                     # Test set forward pass
-                    test_acc = net.batch_accuracy(test_loader)
+                    test_acc = batch_accuracy(
+                        net=net,net_type=args.net_type,
+                        data_loader=test_loader
+                    )
                     print(f"Iteration {counter}, Train Acc: {train_acc*100:.2f}% ,Test Acc: {test_acc * 100:.2f}%")
                     test_acc_hist.append(test_acc.item())
 
