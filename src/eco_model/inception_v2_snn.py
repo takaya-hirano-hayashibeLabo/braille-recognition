@@ -24,33 +24,35 @@ class InceptionV2SNN(nn.Module):
         self.inception_b = InceptionBSNN()
         self.inception_c = InceptionCSNN()
 
+    # def forward(self, x:torch.Tensor):
+    #     """
+    #     :param x: [SNN-time-steps x batch x channel x h x w]
+    #     :return out_sp: [SNN-time-steps x batch x channel x h x w]
+    #     """
+    #     out_sp=[]
+        
+    #     for t in range(x.shape[0]):
+
+    #         out = self.basic_conv(x[t])
+    #         out = self.inception_a(out)
+    #         out = self.inception_b(out)
+    #         out = self.inception_c(out)
+    #         out_sp.append(out)
+        
+    #     return torch.stack(out_sp)
+    
     def forward(self, x:torch.Tensor):
         """
-        :param x: [SNN-time-steps x batch x channel x h x w]
-        :return out_sp: [SNN-time-steps x batch x channel x h x w]
+        :param x: [batch x channel x h x w]
+        :return out_sp: [ batch x channel x h x w]
         """
-        out_sp=[]
-        
-        for t in range(x.shape[0]):
 
-            print(f"[basic] before : {torch.cuda.memory_allocated()/(1024**3)} G")
-            print(f"var size : {sys.getsizeof(x[t])/10e9} G")
-            out = self.basic_conv(x[t])
-            print(f"[inception_a]before : {torch.cuda.memory_allocated()/(1024**3)} G")
-            print(f"var size : {sys.getsizeof(out)/10e9} G")
-            out = self.inception_a(out)
-            print(f"[inception_b]before : {torch.cuda.memory_allocated()/(1024**3)} G")
-            print(f"var size : {sys.getsizeof(out)/10e9} G")
-            out = self.inception_b(out)
-            print(f"[inception_c]before : {torch.cuda.memory_allocated()/(1024**3)} G")
-            print(f"var size : {sys.getsizeof(out)/10e9} G")
-            out = self.inception_c(out)
-            out_sp.append(out)
+        out = self.basic_conv(x)
+        out = self.inception_a(out)
+        out = self.inception_b(out)
+        out = self.inception_c(out)
 
-            print(f"[inception_v2]after : {torch.cuda.memory_allocated()/(1024**3)} G")
-            print(f"var size : {sys.getsizeof(out)/10e9} G")
-        
-        return torch.stack(out_sp)
+        return out
 
 
 class BasicConvSNN(nn.Module):
@@ -188,14 +190,14 @@ class InceptionASNN(nn.Module):
 
         out1 = self.inception_3a_1x1(x)
         out1 = self.inception_3a_1x1_bn(out1)
-        out1,out1_mem = self.inception_a1_snn(out1)
+        out1,_ = self.inception_a1_snn(out1)
 
         out2 = self.inception_3a_3x3_reduce(x)
         out2 = self.inception_3a_3x3_reduce_bn(out2)
         out2 = self.inception_a2_1_snn(out2)
         out2 = self.inception_3a_3x3(out2)
         out2 = self.inception_3a_3x3_bn(out2)
-        out2,out2_mem = self.inception_a2_2_snn(out2)
+        out2,_ = self.inception_a2_2_snn(out2)
 
         out3 = self.inception_3a_double_3x3_reduce(x)
         out3 = self.inception_3a_double_3x3_reduce_bn(out3)
@@ -205,12 +207,12 @@ class InceptionASNN(nn.Module):
         out3 = self.inception_a3_2_snn(out3)
         out3 = self.inception_3a_double_3x3_2(out3)
         out3 = self.inception_3a_double_3x3_2_bn(out3)
-        out3,out3_mem = self.inception_a3_3_snn(out3)
+        out3,_ = self.inception_a3_3_snn(out3)
 
         out4 = self.inception_3a_pool(x)
         out4 = self.inception_3a_pool_proj(out4)
         out4 = self.inception_3a_pool_proj_bn(out4)
-        out4,out4_mem = self.inception_a4_snn(out4)
+        out4,_ = self.inception_a4_snn(out4)
 
         outputs = [out1, out2, out3, out4]
 

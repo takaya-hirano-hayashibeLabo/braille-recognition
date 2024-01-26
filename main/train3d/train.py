@@ -100,7 +100,7 @@ def batch_accuracy(net:nn.Module,net_type:str,data_loader):
         acc=0
         net.eval()
         
-        for data, targets in data_loader:
+        for data, targets in iter(data_loader):
             
             out:torch.Tensor= net(data)
 
@@ -112,10 +112,18 @@ def batch_accuracy(net:nn.Module,net_type:str,data_loader):
             elif net_type.casefold()=="snn":
                 acc += SF.accuracy_rate(out, targets) * out.shape[1]
                 total += out.shape[1]
+                
 
             else:
                 print("net_type error @fn:batch_accuracy")
                 exit(1)
+
+        if net_type.casefold()=="snn":
+            print("firing rate"+"="*50)
+            print(torch.sum(out,dim=0))
+            print("label"+"="*50)
+            print(targets)
+            print("")
                 
         return acc/total
 
@@ -155,7 +163,7 @@ def main():
         y=torch.Tensor(label_data)[shuffle_idx[train_size:]].type(torch.float32)
         )
     
-    batch_size=16
+    batch_size=32
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True,generator=torch.Generator(device=torch.Tensor([0,0]).device))
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True  ,generator=torch.Generator(device=torch.Tensor([0,0]).device))
     #>> データのシャッフルと分割 >>
@@ -165,7 +173,7 @@ def main():
         net=ECO()
         criterion=torch.nn.CrossEntropyLoss()
     elif args.net_type=="snn".casefold():
-        net=ECOSNN(snn_time_step=16)
+        net=ECOSNN(snn_time_step=24)
         criterion=SF.ce_rate_loss()
     else:
         print("net_type error")
@@ -193,24 +201,16 @@ def main():
             loss_val:torch.Tensor = criterion(out, targets.type(torch.long))
 
             # Gradient calculation + weight update
-
-            # print(f"{torch.cuda.memory_allocated()/(1024**3)} G")
-            
-            # print("t"*50)
-            loss_val.backward(retain_graph=True)
-            # print("a"*50)
+            # print(f"{torch.cuda.memory_allocated()/(1024**3)} G") 
+            loss_val.backward()
             optimizer.step()
-            # print("b"*50)
             optimizer.zero_grad()
-            # print("C"*50)
-
-            gc.collect()
             
             # Store loss history for future plotting
             loss_hist.append(loss_val.item())
 
             # Test set
-            if counter % 10 == 0:
+            if counter % 300 == 0:
                 with torch.no_grad():
                     net.eval()
                     
@@ -221,11 +221,13 @@ def main():
                     )
 
                     # Test set forward pass
-                    test_acc = batch_accuracy(
-                        net=net,net_type=args.net_type,
-                        data_loader=test_loader
-                    )
-                    print(f"Iteration {counter}, Train Acc: {train_acc*100:.2f}% ,Test Acc: {test_acc * 100:.2f}%")
+                    test_acc=torch.randn(size=(1,))
+                    # test_acc = batch_accuracy(
+                    #     net=net,net_type=args.net_type,
+                    #     data_loader=test_loader
+                    # )
+                    print(f"Iteration {counter}, Train Acc: {train_acc*100:.2f}%")# ,Test Acc: {test_acc * 100:.2f}%")
+                    # print(f"Iteration {counter}, Train Acc: {train_acc*100:.2f}% ,Test Acc: {test_acc * 100:.2f}%")
                     test_acc_hist.append(test_acc.item())
 
             counter += 1

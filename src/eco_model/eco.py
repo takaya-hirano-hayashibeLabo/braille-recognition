@@ -2,6 +2,7 @@ import torch
 from torch import nn
 import snntorch as snn
 from snntorch import surrogate
+from snntorch import utils
 
 from .inception_v2_nn import InceptionV2
 from .resnet3D_nn import ResNet3D
@@ -30,14 +31,11 @@ class ECO(nn.Module):
         _,c_out,h_out,w_out=out.shape
         out=out.view(n,t,c_out,h_out,w_out) #時系列を復活させる
         
-
-
-        print("[ResNet]")
-        print(f"{torch.cuda.memory_allocated()/(1024**3)} G")
+        # print("[ResNet]")
+        # print(f"{torch.cuda.memory_allocated()/(1024**3)} G")
         out=torch.transpose(out,dim0=1,dim1=2) #時間軸とchannel軸をいれかえる
         out=self.resnet3d(out)
-        print(f"{torch.cuda.memory_allocated()/(1024**3)} G")
-        print("="*50)
+        # print(f"{torch.cuda.memory_allocated()/(1024**3)} G")
 
         out=self.out_layer(out)
 
@@ -50,16 +48,19 @@ class ECOSNN(nn.Module):
 
         self.snn_time_step=snn_time_step
         
-        self.inception_v2=InceptionV2SNN()
+        # self.inception_v2=InceptionV2SNN()
+        self.inception_v2=InceptionV2()
         self.resnet3d=ResNetSNN3D()
+        # self.resnet3d=ResNet3D()
 
         self.out_layer=nn.Sequential(
             nn.Linear(in_features=256,out_features=10,bias=True),
             snn.Leaky(
-                beta=0.5,spike_grad=surrogate.fast_sigmoid(slope=25),
-                init_hidden=True,output=True
-            )
+                    beta=0.5,spike_grad=surrogate.fast_sigmoid(slope=25),
+                    init_hidden=True,output=True,threshold=1
+                )
         )
+        
 
     def encode(self,x:torch.Tensor):
         """
@@ -73,31 +74,35 @@ class ECOSNN(nn.Module):
 
         return out
     
+
     def forward(self,x:torch.Tensor):
         """
         :param x [batch x time_sequence x channel x h x w]
         """
+
+        utils.reset(self.inception_v2)
+        utils.reset(self.resnet3d)
+        utils.reset(self.out_layer)
 
         n,t,c,h,w=x.shape
         x=x.view(n*t,c,h,w)
 
         out=self.encode(x) #[snn_time_step x n*t x c h x w] snnの時間方向を引き伸ばす
 
-        print("[inception-v2]")
-        print(f"before : {torch.cuda.memory_allocated()/(1024**3)} G")
-        out:torch.Tensor=self.inception_v2(out) #[snn_time_step x n*t x c x h x w]
-        _,_,c_out,h_out,w_out=out.shape
-        out=out.view(self.snn_time_step,n,t,c_out,h_out,w_out) #時系列を復活させる
-        print(f"after : {torch.cuda.memory_allocated()/(1024**3)} G")
-        print("="*50)
+        out_sp=[]
+        for step in range(self.snn_time_step):
+  
+            out_step=self.inception_v2.forward(out[step]) #[n*t x c x h x w]
+            _,c_out,h_out,w_out=out_step.shape
+            out_step=out_step.view(n,t,c_out,h_out,w_out) #時系列を復活させる
 
-        print("[ResNet]")
-        print(f"before : {torch.cuda.memory_allocated()/(1024**3)} G")
-        out=torch.transpose(out,dim0=2,dim1=3) #時間軸とchannel軸をいれかえる
-        out=self.resnet3d(out)
-        print(f"after : {torch.cuda.memory_allocated()/(1024**3)} G")
-        print("="*50)
+            out_step=torch.transpose(out_step,1,2)
+            out_step=self.resnet3d.forward(out_step)
+            # print(torch.sum(out_step.reshape(32,-1),dim=1)/out_step.reshape(32,-1).shape[1])
+            # exit(1)
 
-        out,out_mem=self.out_layer(out)
+            out_step,_=self.out_layer(out_step)
+            # out_step=self.out_layer(out_step)
+            out_sp.append(out_step)
 
-        return out
+        return torch.stack(out_sp)        
