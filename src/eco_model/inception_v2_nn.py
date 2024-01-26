@@ -15,6 +15,11 @@ class InceptionV2(nn.Module):
         self.inception_c=InceptionC()
         
     def forward(self, x):
+        """
+        2次元のデータを圧縮するCNN
+        :param x [batch x channel x h x w]
+        :return out [batch x channel x h x w]
+        """
         out=self.basic_conv(x)
         out=self.inception_a(out)
         out=self.inception_b(out)
