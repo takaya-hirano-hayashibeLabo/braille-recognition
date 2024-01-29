@@ -25,42 +25,16 @@ class ResNetSNN3D(nn.Module):
         self.resnet3d_4=ResnetSNN_3D_4()
         self.resnet3d_5=ResnetSNN_3D_5()
         
-        #avgPoolを重み固定の軸索＆シナプスとみなす
-        self.global_avg_pool=nn.AvgPool3d(
-            kernel_size=(4,2,2),stride=1,padding=0
-        )
-        self.out_lif_neuron=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True,
-            threshold=1,output=True)
+        #>> SNNの方でAvgPoolするのは良くない >>
+        # #avgPoolを重み固定の軸索＆シナプスとみなす
+        # self.global_avg_pool=nn.AvgPool3d(
+        #     kernel_size=(4,2,2),stride=1,padding=0
+        # )
+        # self.out_lif_neuron=snn.Leaky(
+        #     beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True,
+        #     threshold=1,output=True)
+        #>> SNNの方でAvgPoolするのは良くない >>
         
-    # def forward(self,x:torch.Tensor):
-    #     """
-    #     :param x : [SNN-time-steps x batch x channel x time-sequence x h x w]
-    #     :return out : [SNN-time-steps x batch x out_dim]
-    #     """
-        
-    #     out_sp=[]
-    #     out_mems=[]
-        
-    #     for t in range(x.shape[0]):
-    #         # print("---")
-    #         out=self.resnet3d_3(x[t])
-    #         out=self.resnet3d_4(out)
-    #         out=self.resnet3d_5(out)            
-    #         out:torch.Tensor=self.global_avg_pool(out) #重み固定の軸索＆シナプスとみなす. avgPoolによってシナプス電流に変換するとみなす.
-            
-    #         out=out.view(out.shape[0],out.shape[1]) #余計な次元を落とす
-            
-    #         # print(f"3DCNN avgPool : {torch.sum(out)}")
-    #         out,out_mem=self.out_lif_neuron(out)
-            
-    #         # print(f"3DCNN sp : {torch.sum(out)}")
-    #         # out_mem=out_mem.view(out.shape[0],out.shape[1]) #余計な次元を落とす
-            
-    #         out_sp.append(out)
-    #         # out_mems.append(out_mem)
-        
-    #     return torch.stack(out_sp)#,torch.stack(out_mems)
     
     def forward(self,x:torch.Tensor):
         """
@@ -71,12 +45,15 @@ class ResNetSNN3D(nn.Module):
         out=self.resnet3d_3(x)
         out=self.resnet3d_4(out)
         out=self.resnet3d_5(out)            
-        out:torch.Tensor=self.global_avg_pool(out) #重み固定の軸索＆シナプスとみなす. avgPoolによってシナプス電流に変換するとみなす.
-        
-        out=out.view(out.shape[0],out.shape[1]) #余計な次元を落とす
-        
-        # print(f"3DCNN avgPool : {torch.sum(out)}")
-        out,out_mem=self.out_lif_neuron(out)
+
+        #>> SNNの方でAvgPoolするのは良くない >>
+        # out:torch.Tensor=self.global_avg_pool(out) #重み固定の軸索＆シナプスとみなす. avgPoolによってシナプス電流に変換するとみなす.
+        # out=out.view(out.shape[0],out.shape[1]) #余計な次元を落とす
+        # # print(f"3DCNN avgPool : {torch.sum(out)}")
+        # out,out_mem=self.out_lif_neuron(out)
+        #>> SNNの方でAvgPoolするのは良くない >>
+
+        out=torch.flatten(out,start_dim=1)
 
         return out
 

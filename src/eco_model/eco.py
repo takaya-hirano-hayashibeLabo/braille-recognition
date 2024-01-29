@@ -54,7 +54,7 @@ class ECOSNN(nn.Module):
         # self.resnet3d=ResNet3D()
 
         self.out_layer=nn.Sequential(
-            nn.Linear(in_features=256,out_features=10,bias=True),
+            nn.Linear(in_features=4096,out_features=10,bias=True),
             snn.Leaky(
                     beta=0.5,spike_grad=surrogate.fast_sigmoid(slope=25),
                     init_hidden=True,output=True,threshold=1

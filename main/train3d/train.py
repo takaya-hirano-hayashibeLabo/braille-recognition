@@ -182,7 +182,7 @@ def main():
         
     optimizer=torch.optim.Adam(net.parameters(),lr=1e-3)
     optimizer.param_groups[0]["capturable"]=True
-    num_epochs = 10
+    num_epochs = 30
     loss_hist = []
     test_acc_hist = []
     counter = 0
@@ -210,7 +210,7 @@ def main():
             loss_hist.append(loss_val.item())
 
             # Test set
-            if counter % 300 == 0:
+            if counter % 100 == 0:
                 with torch.no_grad():
                     net.eval()
                     
