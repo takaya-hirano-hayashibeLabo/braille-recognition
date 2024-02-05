@@ -1,0 +1,11 @@
+net_type:{NET_TYPE}
+train_data_size:{TRAIN_DATA_SIZE}
+test_data_size:{TEST_DATA_SIZE}
+skip_n:{SKIP_N}
+train_size_rate:{TRAIN_SIZE_RATE}
+batch_size:{BATCH_SIZE}
+learning_rate:{LEARNING_RATE}
+num_epoches:{NUM_EPOCHES}
+snn_threshold:{SNN_THRESHOLD}
+snn_steps:{SNN_STEPS}
+memo:{MEMO}

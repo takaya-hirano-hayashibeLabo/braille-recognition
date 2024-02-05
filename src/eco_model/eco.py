@@ -16,7 +16,7 @@ class ECO(nn.Module):
         self.inception_v2=InceptionV2()
         self.resnet3d=ResNet3D()
         self.out_layer=nn.Linear(
-            in_features=256,out_features=10,bias=True
+            in_features=4096,out_features=10,bias=True
         )
 
     def forward(self,x:torch.Tensor):
@@ -43,21 +43,21 @@ class ECO(nn.Module):
 
 
 class ECOSNN(nn.Module):
-    def __init__(self,snn_time_step=30):
+    def __init__(self,snn_time_step=30,snn_threshold=0.3):
         super().__init__()
 
         self.snn_time_step=snn_time_step
         
-        # self.inception_v2=InceptionV2SNN()
-        self.inception_v2=InceptionV2()
-        self.resnet3d=ResNetSNN3D()
+        self.inception_v2=InceptionV2SNN(snn_threshold)
+        # self.inception_v2=InceptionV2()
+        self.resnet3d=ResNetSNN3D(snn_threshold)
         # self.resnet3d=ResNet3D()
 
         self.out_layer=nn.Sequential(
             nn.Linear(in_features=4096,out_features=10,bias=True),
             snn.Leaky(
                     beta=0.5,spike_grad=surrogate.fast_sigmoid(slope=25),
-                    init_hidden=True,output=True,threshold=1
+                    init_hidden=True,output=True,threshold=snn_threshold
                 )
         )
         
@@ -95,10 +95,14 @@ class ECOSNN(nn.Module):
             out_step=self.inception_v2.forward(out[step]) #[n*t x c x h x w]
             _,c_out,h_out,w_out=out_step.shape
             out_step=out_step.view(n,t,c_out,h_out,w_out) #時系列を復活させる
+            # print("SNN Inception firing rate")
+            # print(torch.sum(out_step.reshape(32,-1),dim=1)/out_step.reshape(32,-1).shape[1]) #threshold=1 : 発火率は15%くらい
 
             out_step=torch.transpose(out_step,1,2)
             out_step=self.resnet3d.forward(out_step)
-            # print(torch.sum(out_step.reshape(32,-1),dim=1)/out_step.reshape(32,-1).shape[1])
+            # print("SNN ResNet firing rate")
+            # print(torch.sum(out_step.reshape(32,-1),dim=1)/out_step.reshape(32,-1).shape[1]) #threshold=1 : 発火率は15%くらい
+            # print("---")
             # exit(1)
 
             out_step,_=self.out_layer(out_step)

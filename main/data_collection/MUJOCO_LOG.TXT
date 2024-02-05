@@ -1,3 +1,6 @@
 Tue Dec  5 06:29:00 2023
 ERROR: mjv_updateSceneState: m->nu changed
 
+Mon Feb  5 22:05:04 2024
+ERROR: could not initialize GLFW
+

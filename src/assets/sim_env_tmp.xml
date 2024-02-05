@@ -1575,7 +1575,7 @@
         </body>
     <!-- 点字 -->
 
-    <body name="rh_forearm" childclass="right_hand" axisangle='1 0 0 1.57' pos='0 0 -0.1'>
+  <body name="rh_forearm" childclass="right_hand" axisangle='1 0 0 1.57' pos='0 {BODY_Y_POS} -0.1'>
 
       <joint axis="0 1 0" limited="false" name="slider_z" pos="0 0 0" type="slide" range='-0.1 100'/>
       <joint axis="1 0 0" limited="false" name="slider_x" pos="0 0 0" type="slide"/>
@@ -1754,7 +1754,7 @@
 
   <sensor>
     <plugin name="touch" plugin="mujoco.sensor.touch_grid" objtype="site" objname="touch">
-      <config key="size" value="128 128"/>
+      <config key="size" value="{TOUCH_SENSOR_NUM}"/>
       <config key="fov" value="25 25"/>
       <config key="gamma" value="0"/>
       <config key="nchannel" value="1"/>
@@ -1811,4 +1811,3 @@
     <position name="rh_A_LFJ0" tendon="rh_LFJ0" class="middle_distal"/>
   </actuator>
 </mujoco>
-

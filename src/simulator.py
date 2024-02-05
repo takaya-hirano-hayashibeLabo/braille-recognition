@@ -17,6 +17,15 @@ from matplotlib.animation import ArtistAnimation
 from matplotlib.colors import Normalize
 
 
+#>> .objファイルの読み込み >>
+MESHES={}
+mesh_files=os.listdir(f"{PARENT}/assets/meshes")
+for mesh_file_name in mesh_files:
+    with open(f"{PARENT}/assets/meshes/{mesh_file_name}","rb") as f:
+        MESHES[f"{mesh_file_name}"]=f.read()
+#>> .objファイルの読み込み >>
+
+
 class Simulator():
         
     def __init__(self,sim_env_xml=None):
@@ -72,12 +81,32 @@ class Simulator():
         
         
         
-    def simulate(self,is_view=False,hand_v=1.5*1e-3,hand_x=5.4*2*1e-3,time_th=15,save_dir=f"{PARENT}"):
+    def simulate(
+            self,is_view=False,hand_v=1.5*1e-3,hand_x=5.4*2*1e-3,
+            hand_y=0,time_th=15,touch_sensor_num=128,save_dir=f"{PARENT}"
+            ):
         """
         シミュレーションしてタッチマップを取得する関数
+        :param is_view :描画をするかどうか
+        :param hand_v :手を動かす速度 [m/s]
+        :param hand_x :最初の手のx位置 [m]
+        :param hand_y :最初の手のy位置 [m]
+        :param time_th :何秒間手を動かすか [s]
+        :param touch_sensor_num : 接触センサの数(touch_sensor_num x touch_sensor_num)
+        :param save_dir :保存先のファイル名
         """
+        with open(f"{PARENT}/assets/sim_env_tmp.xml", "r",encoding="utf-8") as f:
+                self.sim_env_xml="".join(f.readlines())
+
+        #>> handのy位置を設定 >>
+        self.sim_env_xml=re.sub("{BODY_Y_POS}",f"{hand_y}",self.sim_env_xml)
+        #>> handのy位置を設定 >>
+
+        #>> sensorの数を設定 >>
+        self.sim_env_xml=re.sub("{TOUCH_SENSOR_NUM}",f"{touch_sensor_num} {touch_sensor_num}",self.sim_env_xml)
+        #>> sensorの数を設定 >>
         
-        model=mujoco.MjModel.from_xml_path(f'{PARENT}/assets/sim_env_tmp.xml') #xmlの読み込み
+        model=mujoco.MjModel.from_xml_string(self.sim_env_xml,MESHES) #xmlの読み込み
         data=mujoco.MjData(model)
         
         pressure_data=[]
@@ -183,12 +212,12 @@ class Simulator():
             frames+=frame_i
         ani=ArtistAnimation(fig,frames,interval=round(1000/fps))
         # ani.save(f'{save_dir}/{self.braille_name}_timestep{model.opt.timestep}.mp4',writer="ffmpeg")
-        ani.save(f'{save_dir}/{self.braille_name}_timestep{model.opt.timestep}.mp4')
+        ani.save(f'{save_dir}/{self.braille_name}_timestep{model.opt.timestep}_handY{hand_y:.5f}.mp4')
         plt.close()
         # plt.show()
         #>> マップに描画 >>
             
-        np.save(f"{save_dir}/{self.braille_name}_timestep{model.opt.timestep}",
+        np.save(f"{save_dir}/{self.braille_name}_timestep{model.opt.timestep}_handY{hand_y:.5f}",
                 np.array(pressure_data))
     
     

@@ -9,10 +9,31 @@ class InceptionV2(nn.Module):
     def __init__(self):
         super(InceptionV2,self).__init__()
         
-        self.basic_conv=BasicConv()
-        self.inception_a=InceptionA()
-        self.inception_b=InceptionB()
-        self.inception_c=InceptionC()
+        # >> 深いInceptionv2 >>
+        # self.basic_conv=BasicConv()
+        # self.inception_a=InceptionA()
+        # self.inception_b=InceptionB()
+        # self.inception_c=InceptionC()
+        # >> 深いInceptionv2 >>
+        
+
+        #>> 簡易的なConv2D >>
+        self.net=nn.Sequential(
+            nn.Conv2d(1, 8, kernel_size=3,stride=1,padding=1),
+            nn.BatchNorm2d(8,eps=1e-5,),
+            nn.MaxPool2d(2),
+            nn.ReLU(),
+            nn.Conv2d(8, 16, kernel_size=3,stride=1,padding=1),
+            nn.BatchNorm2d(16,eps=1e-5,),
+            nn.MaxPool2d(2),
+            nn.ReLU(),
+            nn.Conv2d(16, 32, kernel_size=3,stride=1,padding=1),
+            nn.BatchNorm2d(32,eps=1e-5,),
+            nn.MaxPool2d(2),
+            nn.ReLU(),
+            )
+        #>> 簡易的なConv2D >>
+        
         
     def forward(self, x):
         """
@@ -20,10 +41,19 @@ class InceptionV2(nn.Module):
         :param x [batch x channel x h x w]
         :return out [batch x channel x h x w]
         """
-        out=self.basic_conv(x)
-        out=self.inception_a(out)
-        out=self.inception_b(out)
-        out=self.inception_c(out)
+
+        # >> 深いInceptionv2 >>
+        # out=self.basic_conv(x)
+        # out=self.inception_a(out)
+        # out=self.inception_b(out)
+        # out=self.inception_c(out)
+        # >> 深いInceptionv2 >>
+
+
+        #>> 簡易的なConv2D >>
+        out=self.net(x)
+        #>> 簡易的なConv2D >>
+
         return out
 
 

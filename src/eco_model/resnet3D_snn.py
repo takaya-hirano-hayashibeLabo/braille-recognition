@@ -18,12 +18,12 @@ from snntorch import utils
 from snntorch import spikeplot as splt
 
 class ResNetSNN3D(nn.Module):
-    def __init__(self):
+    def __init__(self,snn_threshold):
         super().__init__()
         
-        self.resnet3d_3=ResnetSNN_3D_3()
-        self.resnet3d_4=ResnetSNN_3D_4()
-        self.resnet3d_5=ResnetSNN_3D_5()
+        self.resnet3d_3=ResnetSNN_3D_3(th=snn_threshold)
+        self.resnet3d_4=ResnetSNN_3D_4(th=snn_threshold)
+        self.resnet3d_5=ResnetSNN_3D_5(th=snn_threshold)
         
         #>> SNNの方でAvgPoolするのは良くない >>
         # #avgPoolを重み固定の軸索＆シナプスとみなす
@@ -31,7 +31,7 @@ class ResNetSNN3D(nn.Module):
         #     kernel_size=(4,2,2),stride=1,padding=0
         # )
         # self.out_lif_neuron=snn.Leaky(
-        #     beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True,
+        #     beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th,
         #     threshold=1,output=True)
         #>> SNNの方でAvgPoolするのは良くない >>
         
@@ -61,7 +61,7 @@ class ResNetSNN3D(nn.Module):
 class ResnetSNN_3D_3(nn.Module):
     '''Resnet_3D_3'''
 
-    def __init__(self):
+    def __init__(self,th):
         super().__init__()
         
         # 軸索＆シナプス役　電流へ変換
@@ -72,7 +72,7 @@ class ResnetSNN_3D_3(nn.Module):
         self.res3a_bn = nn.BatchNorm3d(
             64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.res3a_1_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th
         )
 
         self.res3b_1 = nn.Conv3d(64, 64, kernel_size=(
@@ -80,7 +80,7 @@ class ResnetSNN_3D_3(nn.Module):
         self.res3b_1_bn = nn.BatchNorm3d(
             64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.res3b_1_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th
         )
         
         self.res3b_2 = nn.Conv3d(64, 64, kernel_size=(
@@ -89,7 +89,7 @@ class ResnetSNN_3D_3(nn.Module):
         self.res3b_bn = nn.BatchNorm3d(
             64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.res3b_2_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True,
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th,
             output=True
         ) #最後にスパイクへ
 
@@ -119,7 +119,7 @@ class ResnetSNN_3D_3(nn.Module):
 class ResnetSNN_3D_4(nn.Module):
     '''Resnet_3D_4'''
 
-    def __init__(self):
+    def __init__(self,th):
         super().__init__()
 
         #>> Layer1 >>
@@ -128,7 +128,7 @@ class ResnetSNN_3D_4(nn.Module):
         self.res4a_1_bn = nn.BatchNorm3d(
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.res4a_1_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th
         ) #スパイクへ
         self.res4a_2 = nn.Conv3d(128,128, kernel_size=(
             3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1)) #シナプス電流へ
@@ -141,7 +141,7 @@ class ResnetSNN_3D_4(nn.Module):
         self.res4a_bn = nn.BatchNorm3d(
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.res4a_2_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th
         ) #スパイクへ
         
         self.res4b_1 = nn.Conv3d(128, 128, kernel_size=(
@@ -149,7 +149,7 @@ class ResnetSNN_3D_4(nn.Module):
         self.res4b_1_bn = nn.BatchNorm3d(
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.res4b_1_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th
         ) #スパイクへ
         self.res4b_2 = nn.Conv3d(128,128, kernel_size=(
             3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1)) #シナプス電流へ
@@ -159,7 +159,7 @@ class ResnetSNN_3D_4(nn.Module):
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         
         self.res4b_2_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True,
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th,
             output=True
         )
 
@@ -198,7 +198,7 @@ class ResnetSNN_3D_5(nn.Module):
     '''Resnet_3D_5
     '''
 
-    def __init__(self):
+    def __init__(self,th):
         super().__init__()
         
         #>> Layer1 >>
@@ -207,7 +207,7 @@ class ResnetSNN_3D_5(nn.Module):
         self.res5a_1_bn = nn.BatchNorm3d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.res5a_1_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th
         ) #スパイクへ
         self.res5a_2 = nn.Conv3d(256, 256, kernel_size=(
             3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
@@ -221,7 +221,7 @@ class ResnetSNN_3D_5(nn.Module):
         self.res5a_bn = nn.BatchNorm3d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.res5a_2_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th
         ) #スパイクへ
         
         self.res5b_1 = nn.Conv3d(256,256, kernel_size=(
@@ -229,7 +229,7 @@ class ResnetSNN_3D_5(nn.Module):
         self.res5b_1_bn = nn.BatchNorm3d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.res5b_1_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th
         ) #スパイクへ
         self.res5b_2 = nn.Conv3d(256,256, kernel_size=(
             3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
@@ -238,7 +238,7 @@ class ResnetSNN_3D_5(nn.Module):
         self.res5b_bn = nn.BatchNorm3d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.res5b_2_snn=snn.Leaky(
-            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True,
+            beta=0.5, spike_grad=surrogate.fast_sigmoid(slope=25), init_hidden=True, threshold=th,
             output=True
         ) #スパイクへ
 

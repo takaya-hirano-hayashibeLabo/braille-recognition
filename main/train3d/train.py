@@ -22,8 +22,10 @@ from snntorch import utils
 from snntorch import spikeplot as splt
 
 import matplotlib.pyplot as plt
-
-import gc
+import pandas as pd
+from tqdm import tqdm
+import re
+from datetime import datetime
 
 from src import ECO,ECOSNN
 
@@ -96,8 +98,8 @@ class DataTransformNrm():
 
 def batch_accuracy(net:nn.Module,net_type:str,data_loader):
     with torch.no_grad():
-        total=0
-        acc=0
+        total=[]
+        acc=[]
         net.eval()
         
         for data, targets in iter(data_loader):
@@ -106,17 +108,20 @@ def batch_accuracy(net:nn.Module,net_type:str,data_loader):
 
             if net_type.casefold()=="nn":
                 est_class=torch.argmax(out,dim=1) #選択されたクラス
-                acc+=torch.sum(est_class==targets) #同じならTrueで１が合算される
-                total += out.shape[0]
+                acc+=[torch.sum(est_class==targets).item()] #同じならTrueで１が合算される
+                total += [out.shape[0]]
 
             elif net_type.casefold()=="snn":
-                acc += SF.accuracy_rate(out, targets) * out.shape[1]
-                total += out.shape[1]
+                acc += [SF.accuracy_rate(out, targets).item() * out.shape[1]]
+                total += [out.shape[1]]
                 
 
             else:
                 print("net_type error @fn:batch_accuracy")
                 exit(1)
+
+        result_mean=np.mean(np.array(acc)/np.array(total))
+        result_std=np.std(np.array(acc)/np.array(total))
 
         if net_type.casefold()=="snn":
             print("firing rate"+"="*50)
@@ -125,7 +130,7 @@ def batch_accuracy(net:nn.Module,net_type:str,data_loader):
             print(targets)
             print("")
                 
-        return acc/total
+        return result_mean,result_std
 
 
 def main():
@@ -133,12 +138,30 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--net_type",default='nn',type=str)
     parser.add_argument("--save_dir",default=f"{PARENT}",type=str)
+    parser.add_argument("--save_interval_iteration",default=100,type=int)
+    parser.add_argument("--memo",default="",type=str)
+    parser.add_argument("--snn_steps",default=16,type=int)
+    parser.add_argument("--snn_threshold",default=0.3,type=float)
     args=parser.parse_args()
+
+
+    #>> パラメータの設定 >>
+    skip_n=2 #データが多すぎるので多少スキップする
+    train_size_rate=0.8
+    batch_size=32
+    lr=1e-3
+    num_epochs = 1000
+    #>> パラメータの設定 >>
+
     
-    data_dir=f"{ROOT}/main/data_collection/data3d"
+    data_dir=f"{ROOT}/main/data_collection/data3d_for_train"
     input_data:np.ndarray=np.load(f"{data_dir}/input_3d.npy")
+    # input_data=input_data[::skip_n,:,np.newaxis,:,:] #channel方向に次元を伸ばす
     input_data=input_data[:,:,np.newaxis,:,:] #channel方向に次元を伸ばす
+    # label_data:np.ndarray=np.load(f"{data_dir}/label.npy").astype(int)[::skip_n]
     label_data:np.ndarray=np.load(f"{data_dir}/label.npy").astype(int)
+    print("input_shape : " + f"{input_data.shape}")
+    print("label_shape : " + f"{label_data.shape}")
 
     # >> データのリサイズと標準化 >>
     data_size=(64,64) #28, 64
@@ -149,10 +172,10 @@ def main():
     # >> データのリサイズと標準化 >>
     
     #>> データのシャッフルと分割 >>
-    train_size_rate=0.7
     train_size=round(train_size_rate*input_data.shape[0]) #学習データのサイズ
     print(f"train_size:{train_size}, test_size:{input_data.shape[0]-train_size}")
     shuffle_idx=torch.randperm(input_data.shape[0])
+    print(shuffle_idx)
     
     train_dataset=Datasets(
         x=input_data_nrm[shuffle_idx[:train_size]],
@@ -163,32 +186,56 @@ def main():
         y=torch.Tensor(label_data)[shuffle_idx[train_size:]].type(torch.float32)
         )
     
-    batch_size=32
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True,generator=torch.Generator(device=torch.Tensor([0,0]).device))
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True  ,generator=torch.Generator(device=torch.Tensor([0,0]).device))
-    #>> データのシャッフルと分割 >>
+        #>> データのシャッフルと分割 >>
     
     #>> ネットワークの設定 >>
     if args.net_type=="nn".casefold():
         net=ECO()
         criterion=torch.nn.CrossEntropyLoss()
     elif args.net_type=="snn".casefold():
-        net=ECOSNN(snn_time_step=24)
+        net=ECOSNN(snn_time_step=args.snn_steps,snn_threshold=args.snn_threshold)
         criterion=SF.ce_rate_loss()
+        # criterion=SF.ce_count_loss() #こっちは良くない。全部発火する。
     else:
         print("net_type error")
         exit(1)
         
+    #Save model
+    save_dir=f"{PARENT}/{args.save_dir}_{datetime.now().strftime('%Y%m%d_%H.%M.%S')}"
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
         
-    optimizer=torch.optim.Adam(net.parameters(),lr=1e-3)
+    optimizer=torch.optim.Adam(net.parameters(),lr=lr)
     optimizer.param_groups[0]["capturable"]=True
-    num_epochs = 30
     loss_hist = []
-    test_acc_hist = []
     counter = 0
+    result_list=[]
+
+
+    #>> 学習パラメータの保存 >>
+    with open(f"{PARENT}/train_param_template.txt", "r") as f:
+        train_param_txt="".join(f.readlines())
+
+    train_param_txt=re.sub("{NET_TYPE}",f"{args.net_type}",train_param_txt)
+    train_param_txt=re.sub("{SKIP_N}",f"{skip_n}",train_param_txt)
+    train_param_txt=re.sub("{TRAIN_SIZE_RATE}",f"{train_size_rate}",train_param_txt)
+    train_param_txt=re.sub("{BATCH_SIZE}",f"{batch_size}",train_param_txt)
+    train_param_txt=re.sub("{LEARNING_RATE}",f"{lr}",train_param_txt)
+    train_param_txt=re.sub("{NUM_EPOCHES}",f"{num_epochs}",train_param_txt)
+    train_param_txt=re.sub("{MEMO}",f"{args.memo}",train_param_txt)
+    train_param_txt=re.sub("{TRAIN_DATA_SIZE}",f"{train_size}",train_param_txt)
+    train_param_txt=re.sub("{TEST_DATA_SIZE}",f"{input_data.shape[0]-train_size}",train_param_txt)
+    train_param_txt=re.sub("{SNN_THRESHOLD}",f"{args.snn_threshold}",train_param_txt)
+    train_param_txt=re.sub("{SNN_STEPS}",f"{args.snn_steps}",train_param_txt)
+
+    with open(f"{save_dir}/train_param.txt", "w") as f:
+        f.write(train_param_txt)
+    #>> 学習パラメータの保存 >>
         
     # Outer training loop
-    for epoch in range(num_epochs):
+    for epoch in tqdm(range(num_epochs)):
 
         # Training loop
         for data, targets in iter(train_loader):
@@ -210,58 +257,70 @@ def main():
             loss_hist.append(loss_val.item())
 
             # Test set
-            if counter % 100 == 0:
+            if counter % args.save_interval_iteration == 0:
                 with torch.no_grad():
                     net.eval()
                     
                     # Train acc
-                    train_acc=batch_accuracy(
-                        net=net,net_type=args.net_type,
-                        data_loader=train_loader
-                    )
+                    # train_acc_mean,train_acc_std=batch_accuracy(
+                    #     net=net,net_type=args.net_type,
+                    #     data_loader=train_loader
+                    # )
 
                     # Test set forward pass
-                    test_acc=torch.randn(size=(1,))
-                    # test_acc = batch_accuracy(
-                    #     net=net,net_type=args.net_type,
-                    #     data_loader=test_loader
-                    # )
-                    print(f"Iteration {counter}, Train Acc: {train_acc*100:.2f}%")# ,Test Acc: {test_acc * 100:.2f}%")
-                    # print(f"Iteration {counter}, Train Acc: {train_acc*100:.2f}% ,Test Acc: {test_acc * 100:.2f}%")
-                    test_acc_hist.append(test_acc.item())
+                    test_acc_mean,test_acc_std = batch_accuracy(
+                        net=net,net_type=args.net_type,
+                        data_loader=test_loader
+                    )
+                    print(f"Iteration {counter}, Test Acc: {test_acc_mean * 100:.2f}%")
+                    result_list+=[
+                        [test_acc_mean,test_acc_std]
+                    ]
 
+                    result_table=pd.DataFrame(
+                        result_list,columns=["test_mean","test_std"]
+                        )
+                    result_table.to_csv(f"{save_dir}/test_accuracy.csv",encoding="utf-8",index=False)
+
+                    torch.save(net.state_dict(),f"{save_dir}/model_iter{counter}.pth")
             counter += 1
-            
-    #Save model
-    save_dir=f"{PARENT}/{args.save_dir}"
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    torch.save(net.state_dict(),f"{save_dir}/model.pth")
+
+        
+    
     with open(f"{save_dir}/std_param.csv","w") as f:
         lines=f"mean,std\n{mean.item()},{std.item()}"
         f.write(lines)
             
     # Plot Loss
     fig = plt.figure(facecolor="w")
-    plt.plot(test_acc_hist)
+    plt.plot(
+        np.array(range(result_table.shape[0]))*args.save_interval_iteration,
+        result_table["test_mean"].values,color="blue"
+        )
+    plt.fill_between(
+        x=np.array(range(result_table.shape[0]))*args.save_interval_iteration,
+        y1=result_table["test_mean"].values-result_table["test_std"].values,
+        y2=result_table["test_mean"].values+result_table["test_std"].values,
+        color="blue",alpha=0.5
+    )
     plt.title("Test Set Accuracy")
-    plt.xlabel("Epoch")
+    plt.xlabel("Iteration")
     plt.ylabel("Accuracy")
     plt.savefig(f"{save_dir}/test_accuracy")
-    plt.show()
+    # plt.show()
     
-    if args.net_type=="snn".casefold():
-        idx = 0
+    # if args.net_type=="snn".casefold():
+    #     idx = 0
 
-        fig, ax = plt.subplots(facecolor='w', figsize=(12, 7))
-        labels=['0', '1', '2', '3', '4', '5', '6', '7', '8','9']
+    #     fig, ax = plt.subplots(facecolor='w', figsize=(12, 7))
+    #     labels=['0', '1', '2', '3', '4', '5', '6', '7', '8','9']
 
-        spikes=net(input_data_nrm)
+    #     spikes=net(input_data_nrm)
 
-        #  Plot spike count histogram
-        anim = splt.spike_count(spikes[:, idx].detach().cpu(), fig, ax, labels=labels,
-                                animate=True, interpolate=4)
-        plt.show()
+    #     #  Plot spike count histogram
+    #     anim = splt.spike_count(spikes[:, idx].detach().cpu(), fig, ax, labels=labels,
+    #                             animate=True, interpolate=4)
+    #     plt.show()
     
 if __name__=="__main__":
     main()

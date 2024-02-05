@@ -4,8 +4,10 @@ ROOT=PARENT.parent.parent
 
 import sys
 sys.path.append(str(ROOT))
+import os
 
 import pandas
+import numpy as np
 from tqdm import tqdm
 import argparse
 
@@ -17,8 +19,21 @@ def main():
     """
     parser=argparse.ArgumentParser()
     parser.add_argument("--dot_shape",default="default",
-                        type=str,help="dot_shape:{'default', 'sloped'}"
+                        type=str,help="dot_shape:{'default', 'sloped'}",
+                        required=True
                         )
+    parser.add_argument(
+        "--episode_num",default=1,type=int,
+        help="同じ文字を何エピソード取得するか"
+    )
+    parser.add_argument(
+        "--is_view",type=bool,default=False
+    )
+    parser.add_argument(
+        "--touch_sensor_num",type=int,default=128
+    )
+    parser.add_argument("--save_dir",default="data",type=str)
+    parser.add_argument("--is_handy_random",default=False,type=bool)
     args=parser.parse_args()
     
     dot_shape=args.dot_shape
@@ -28,24 +43,33 @@ def main():
     
     braille_maker=BrailleMaker()
     simulator=Simulator()
-    if dot_shape=="default":
-        save_dir=f"{PARENT}/data"
-    elif dot_shape=="sloped":
-        save_dir=f"{PARENT}/data-sloped"
-    
-    for braille in (braille_list_csv.values):
-        name,dot_pos_list=braille
-        dot_pos_list=dot_pos_list.split()
-        # print(f"{name}, {dot_pos_list}")
-        
-        braille_maker.raise_dot_resolution(N=240,dot_shape=dot_shape)
-        braille_maker.make_braille_body(name=name,dot_pos_list=dot_pos_list,dot_shape=dot_shape)
-        
-        simulator.laod_braille_body(braille_name=name,dot_shape=dot_shape)
-        simulator.simulate(
-            is_view=False,
-            save_dir=save_dir
-        )
+    save_dir=f"{PARENT}/{args.save_dir}"
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+
+    for episode in range(args.episode_num):
+        print(f"[EPISODE {episode+1}/{args.episode_num}]"+"-"*50)
+
+        #>> ランダムにhandのy位置を決める >>
+        hand_y=np.random.uniform(low=-0.0025, high=0.0025) * args.is_handy_random
+        #>> ランダムにhandのy位置を決める >>
+
+        for braille in (braille_list_csv.values):
+            name,dot_pos_list=braille
+            dot_pos_list=dot_pos_list.split()
+            # print(f"{name}, {dot_pos_list}")
+            
+            braille_maker.raise_dot_resolution(N=240,dot_shape=dot_shape)
+            braille_maker.make_braille_body(name=name,dot_pos_list=dot_pos_list,dot_shape=dot_shape)
+            
+            simulator.laod_braille_body(braille_name=name,dot_shape=dot_shape)
+            simulator.simulate(
+                is_view=args.is_view,
+                hand_y=hand_y,
+                save_dir=save_dir,
+                touch_sensor_num=args.touch_sensor_num
+            )
+
     
 if __name__=="__main__":
     main()

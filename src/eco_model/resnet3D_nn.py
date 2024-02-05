@@ -14,9 +14,9 @@ class ResNet3D(nn.Module):
         self.resnet3d_4=Resnet_3D_4()
         self.resnet3d_5=Resnet_3D_5()
         
-        self.global_avg_pool=nn.AvgPool3d(
-            kernel_size=(4,2,2),stride=1,padding=0
-        )
+        # self.global_avg_pool=nn.AvgPool3d(
+        #     kernel_size=(4,2,2),stride=1,padding=0
+        # )
         
     def forward(self,x):
         """
@@ -26,9 +26,10 @@ class ResNet3D(nn.Module):
         out=self.resnet3d_3(x)
         out=self.resnet3d_4(out)
         out=self.resnet3d_5(out)
-        out:torch.Tensor=self.global_avg_pool(out)
+        # out:torch.Tensor=self.global_avg_pool(out)
         
-        out=out.view(out.shape[0],out.shape[1]) #余計な次元を落とす
+        # out=out.view(out.shape[0],out.shape[1]) #余計な次元を落とす
+        out=torch.flatten(out,start_dim=1)
         
         return out
 

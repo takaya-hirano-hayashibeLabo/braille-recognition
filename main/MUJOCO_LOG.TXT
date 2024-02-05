@@ -7,3 +7,15 @@ ERROR: OpenGL version 1.5 or higher required
 Fri Jan 26 16:03:26 2024
 ERROR: OpenGL version 1.5 or higher required
 
+Tue Jan 30 13:57:52 2024
+ERROR: OpenGL version 1.5 or higher required
+
+Tue Jan 30 14:02:19 2024
+ERROR: OpenGL version 1.5 or higher required
+
+Tue Jan 30 14:03:58 2024
+ERROR: OpenGL version 1.5 or higher required
+
+Tue Jan 30 14:30:45 2024
+ERROR: could not initialize GLFW
+
