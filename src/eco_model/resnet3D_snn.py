@@ -25,7 +25,7 @@ class ResNetSNN3D(nn.Module):
         self.resnet3d_4=ResnetSNN_3D_4(th=snn_threshold)
         self.resnet3d_5=ResnetSNN_3D_5(th=snn_threshold)
         
-        #>> SNNの方でAvgPoolするのは良くない >>
+        #>> SNNの方でAvgPoolするのは良くない. spikeをpoolingしても1か0しか無いので、情報が消えるだけ >>
         # #avgPoolを重み固定の軸索＆シナプスとみなす
         # self.global_avg_pool=nn.AvgPool3d(
         #     kernel_size=(4,2,2),stride=1,padding=0
@@ -46,7 +46,7 @@ class ResNetSNN3D(nn.Module):
         out=self.resnet3d_4(out)
         out=self.resnet3d_5(out)            
 
-        #>> SNNの方でAvgPoolするのは良くない >>
+        #>> SNNの方でAvgPoolするのは良くない spikeをpoolingしても1か0しか無いので、情報が消えるだけ>>
         # out:torch.Tensor=self.global_avg_pool(out) #重み固定の軸索＆シナプスとみなす. avgPoolによってシナプス電流に変換するとみなす.
         # out=out.view(out.shape[0],out.shape[1]) #余計な次元を落とす
         # # print(f"3DCNN avgPool : {torch.sum(out)}")
@@ -271,10 +271,7 @@ class ResnetSNN_3D_5(nn.Module):
         out += residual2  # res5b
         
         out = self.res5b_bn(out)
-        # print(f"bn : {torch.sum(out)}")
                 
         out_sp,out_mem = self.res5b_2_snn(out)
-        # print(f"sp : {torch.sum(out_sp)}")
         
-
-        return out_sp#,out_mem
+        return out_sp

@@ -1,0 +1,9 @@
+﻿{
+    "net_type": "nn",
+    "model_name": "model_iter51900",
+    "data_dir": "/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/data_collection/test_data/3d_data",
+    "frac_min": 0.1,
+    "frac_max": 2.0,
+    "frac_diff": 0.1,
+    "test_trial_num": "1"
+}

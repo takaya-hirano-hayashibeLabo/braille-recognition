@@ -31,11 +31,8 @@ class ECO(nn.Module):
         _,c_out,h_out,w_out=out.shape
         out=out.view(n,t,c_out,h_out,w_out) #時系列を復活させる
         
-        # print("[ResNet]")
-        # print(f"{torch.cuda.memory_allocated()/(1024**3)} G")
         out=torch.transpose(out,dim0=1,dim1=2) #時間軸とchannel軸をいれかえる
         out=self.resnet3d(out)
-        # print(f"{torch.cuda.memory_allocated()/(1024**3)} G")
 
         out=self.out_layer(out)
 
@@ -49,9 +46,7 @@ class ECOSNN(nn.Module):
         self.snn_time_step=snn_time_step
         
         self.inception_v2=InceptionV2SNN(snn_threshold)
-        # self.inception_v2=InceptionV2()
         self.resnet3d=ResNetSNN3D(snn_threshold)
-        # self.resnet3d=ResNet3D()
 
         self.out_layer=nn.Sequential(
             nn.Linear(in_features=4096,out_features=10,bias=True),
@@ -95,18 +90,11 @@ class ECOSNN(nn.Module):
             out_step=self.inception_v2.forward(out[step]) #[n*t x c x h x w]
             _,c_out,h_out,w_out=out_step.shape
             out_step=out_step.view(n,t,c_out,h_out,w_out) #時系列を復活させる
-            # print("SNN Inception firing rate")
-            # print(torch.sum(out_step.reshape(32,-1),dim=1)/out_step.reshape(32,-1).shape[1]) #threshold=1 : 発火率は15%くらい
 
             out_step=torch.transpose(out_step,1,2)
             out_step=self.resnet3d.forward(out_step)
-            # print("SNN ResNet firing rate")
-            # print(torch.sum(out_step.reshape(32,-1),dim=1)/out_step.reshape(32,-1).shape[1]) #threshold=1 : 発火率は15%くらい
-            # print("---")
-            # exit(1)
 
             out_step,_=self.out_layer(out_step)
-            # out_step=self.out_layer(out_step)
             out_sp.append(out_step)
 
         return torch.stack(out_sp)        

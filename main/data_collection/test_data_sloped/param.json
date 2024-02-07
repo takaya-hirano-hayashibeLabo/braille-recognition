@@ -1,0 +1,8 @@
+{
+    "dot_shape": "sloped",
+    "episode_num": 1,
+    "is_view": false,
+    "touch_sensor_num": 128,
+    "save_dir": "test_data_sloped",
+    "is_handy_random": false
+}

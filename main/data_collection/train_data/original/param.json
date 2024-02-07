@@ -1,0 +1,8 @@
+{
+    "dot_shape": "default",
+    "episode_num": 10,
+    "is_view": false,
+    "touch_sensor_num": 128,
+    "save_dir": "train_data/original",
+    "is_handy_random": true
+}

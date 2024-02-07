@@ -154,7 +154,7 @@ def main():
     #>> パラメータの設定 >>
 
     
-    data_dir=f"{ROOT}/main/data_collection/data3d_for_train"
+    data_dir=f"{ROOT}/main/data_collection/train_data/3d_data"
     input_data:np.ndarray=np.load(f"{data_dir}/input_3d.npy")
     # input_data=input_data[::skip_n,:,np.newaxis,:,:] #channel方向に次元を伸ばす
     input_data=input_data[:,:,np.newaxis,:,:] #channel方向に次元を伸ばす

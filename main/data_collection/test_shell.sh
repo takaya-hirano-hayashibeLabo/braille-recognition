@@ -1,5 +1,3 @@
-mkdir ./test_shell
-
-python ./test_shell.py
+python ./test_shell.py 
 
 echo done

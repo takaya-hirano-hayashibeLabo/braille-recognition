@@ -9,3 +9,7 @@ num_epoches:1000
 snn_threshold:1.0
 snn_steps:24
 memo:snn_inception
+
+SNNのInceptionでやったモデル.
+そんなに悪くない.92%くらいまでいってる.
+もうちょっと、モデルを調整したらちゃんと98％とかいきそう.

@@ -1,9 +1,0 @@
-net_type:snn
-train_data_size:2924
-test_data_size:325
-skip_n:10
-train_size_rate:0.9
-batch_size:64
-learning_rate:0.001
-num_epoches:50
-memo:final_snn_th_0.1

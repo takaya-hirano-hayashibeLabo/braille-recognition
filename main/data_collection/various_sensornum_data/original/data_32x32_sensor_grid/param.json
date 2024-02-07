@@ -1,0 +1,8 @@
+{
+    "dot_shape": "default",
+    "episode_num": 10,
+    "is_view": false,
+    "touch_sensor_num": 32,
+    "save_dir": "various_sensornum_data/original/data_32x32_sensor_grid",
+    "is_handy_random": true
+}

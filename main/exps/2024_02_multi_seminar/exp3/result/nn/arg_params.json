@@ -1,0 +1,5 @@
+﻿{
+    "net_type": "nn",
+    "model_name": "model_iter10000",
+    "data_dir": "/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/data_collection/various_sensornum_data/data3d"
+}
