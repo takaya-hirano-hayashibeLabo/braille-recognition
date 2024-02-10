@@ -16,7 +16,7 @@ torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
 import snntorch as snn
 from snntorch import surrogate
-from snntorch import backprop
+# from snntorch import backprop
 from snntorch import functional as SF
 from snntorch import utils
 from snntorch import spikeplot as splt

@@ -14,12 +14,12 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
-import snntorch as snn
-from snntorch import surrogate
-from snntorch import backprop
-from snntorch import functional as SF
-from snntorch import utils
-from snntorch import spikeplot as splt
+# import snntorch as snn
+# from snntorch import surrogate
+# from snntorch import backprop
+# from snntorch import functional as SF
+# from snntorch import utils
+# from snntorch import spikeplot as splt
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import ArtistAnimation as arani
@@ -70,6 +70,33 @@ class DataTransformStd():
         
         return data_nrm,mean,std
 
+class DataTransformNrm():
+    """
+    ２次元データ（画像と同じ次元）をリサイズ＆正規化するクラス
+    """
+        
+    def __call__(self,data,size=(28,28),max=None,min=None):
+        """
+        :param data: [N x C x H x W]
+        :param size: 変換後のサイズ
+        :return data_nrm, max, min
+        """
+        
+        if not torch.is_tensor(data):
+            data=torch.Tensor(data)
+        
+        if max is None and min is None:
+            max=torch.max(data)
+            min=torch.min(data)
+            
+        data_nrm=F.interpolate(
+            torch.Tensor((data-min)/(1e-20+max)),
+            size,mode='area'
+        )
+        
+        return data_nrm,max,min
+
+
 
 def main():
     parser=argparse.ArgumentParser()
@@ -82,12 +109,16 @@ def main():
     args=parser.parse_args()
 
     MODEL_DIR=f"{str(PARENT.parent)}/models/simple_conv2d_"+args.net_type
+    # if args.net_type=="snn".casefold():
+    #     MODEL_DIR="/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/train3d/snn_20240209_17.48.54"
+    # else:
+    #     MODEL_DIR="/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/train3d/nn_20240209_19.33.35"
 
     #>> 学習パラメータの読み込み >>
     train_param={}
     with open(f"{MODEL_DIR}/train_param.txt", "r") as f:
         for line in f.readlines():
-            key,val=line.replace("\n","").split(":")
+            key,val=line.replace("\n","").split(":",1)
             train_param[key]=val
     # print(train_param)
 
@@ -119,7 +150,7 @@ def main():
     label_data:np.ndarray=np.load(f"{args.data_dir}/label.npy").astype(int)
     mean,std=pd.read_csv(f"{MODEL_DIR}/std_param.csv").values[0]
     data_size=(64,64) #28, 64
-    transform=DataTransformStd()
+    transform=DataTransformNrm()
     n,t,c,h,w=input_data.shape
     # >> データのリサイズと標準化 >>
 

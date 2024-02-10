@@ -73,6 +73,32 @@ class DataTransformStd():
         )
         
         return data_nrm,mean,std
+    
+class DataTransformNrm():
+    """
+    ２次元データ（画像と同じ次元）をリサイズ＆正規化するクラス
+    """
+        
+    def __call__(self,data,size=(28,28),max=None,min=None):
+        """
+        :param data: [N x C x H x W]
+        :param size: 変換後のサイズ
+        :return data_nrm, max, min
+        """
+        
+        if not torch.is_tensor(data):
+            data=torch.Tensor(data)
+        
+        if max is None and min is None:
+            max=torch.max(data)
+            min=torch.min(data)
+            
+        data_nrm=F.interpolate(
+            torch.Tensor((data-min)/(1e-20+max)),
+            size,mode='area'
+        )
+        
+        return data_nrm,max,min
 
 
 def main():
@@ -80,18 +106,20 @@ def main():
     parser.add_argument("--net_type",required=True,type=str)
     parser.add_argument("--model_name",type=str,required=True)
     parser.add_argument("--data_dir",required=True)
-    parser.add_argument("--mask_sizs_min",default=0.1,type=float)
-    parser.add_argument("--mask_size_max",default=2.0,type=float)
-    parser.add_argument("--mask_size_diff",default=0.1,type=float)
+    parser.add_argument("--mask_size_min",default=1, type=int)
+    parser.add_argument("--mask_size_max",default=4, type=int)
+    parser.add_argument("--mask_size_diff",default=1,type=int)
     args=parser.parse_args()
 
-    MODEL_DIR=f"{str(PARENT.parent)}/models/simple_conv2d_"+args.net_type
+    # MODEL_DIR=f"{str(PARENT.parent)}/models/simple_conv2d_"+args.net_type
+    MODEL_DIR="/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/train3d/snn_20240209_17.48.54"
+    # MODEL_DIR="/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/train3d/nn_20240209_17.36.06"
 
     #>> 学習パラメータの読み込み >>
     train_param={}
     with open(f"{MODEL_DIR}/train_param.txt", "r") as f:
         for line in f.readlines():
-            key,val=line.replace("\n","").split(":")
+            key,val=line.replace("\n","").split(":",1)
             train_param[key]=val
     # print(train_param)
 
@@ -123,13 +151,14 @@ def main():
     label_data:np.ndarray=np.load(f"{args.data_dir}/label.npy").astype(int)
     mean,std=pd.read_csv(f"{MODEL_DIR}/std_param.csv").values[0]
     data_size=(64,64) #28, 64
-    transform=DataTransformStd()
+    # transform=DataTransformStd()
+    transform=DataTransformNrm()
     n,t,c,h,w=input_data.shape
     # >> データのリサイズと標準化 >>
 
     mask_size_list=np.arange(
         args.mask_size_min,
-        args.mask_size_max+args.mask_rate_diff,
+        args.mask_size_max+1,
         args.mask_size_diff
         )
 
@@ -137,15 +166,39 @@ def main():
     net.eval()
     with torch.no_grad():
         for mask_size in tqdm(mask_size_list):
+            
+            if mask_size>0:
+                #>> ロードした生データにマスクをかける >>
+                masked_datas=[]
+                pivoty_lim,pivotx_lim=h-mask_size,w-mask_size
+                for batch_i in range(n):
 
-            masked_datas=[]
-            pivoty_lim,pivotx_lim=h-mask_size,w-mask_size
-            for batch_i in range(n):
-                masked_data_i=mask_pixels(
-                    pixels=
-                )
+                    # maskのpivotをランダムに決める
+                    mask_pivot=(
+                        np.random.randint(0,pivotx_lim),
+                        np.random.randint(0,pivoty_lim)
+                    )
 
-            input_data_nrm,mean,std=transform(input_data.reshape(n*t,c,h,w),data_size,mean,std)
+                    masked_data_i=mask_pixels(
+                        pixels=input_data[batch_i],
+                        mask_pivot=mask_pivot,
+                        mask_size=(mask_size,mask_size),
+                        mask_val=0
+                    )
+                    masked_datas.append(
+                        masked_data_i
+                    )
+
+                # plt.imshow(masked_data_i[0][0])
+                # plt.savefig(f"{PARENT}/test_fig.png")
+                # exit(1)
+                masked_datas=np.array(masked_datas)
+                #>> ロードした生データにマスクをかける >>
+            else:
+                masked_datas=input_data
+
+            # input_data_nrm,mean,std=transform(masked_datas.reshape(n*t,c,h,w),data_size,mean,std)
+            input_data_nrm,mean,std=transform(masked_datas.reshape(n*t,c,h,w),data_size,max=0.015,min=0.0)
             input_data_nrm=input_data_nrm.view(n,t,c,data_size[0],data_size[1])
 
             if args.net_type=="nn".casefold():
@@ -172,17 +225,17 @@ def main():
             est=torch.argmax(out,dim=1).to("cpu").numpy()
             acc_vector=np.where(label_data==est,1,0) #正解ならTrue, ハズレならFalse
 
-            result_frac=[]
+            result_mask=[]
             for i in range(10):
                 acc_vector_i=acc_vector[np.argwhere(label_data==i)]
                 mean_i=np.mean(acc_vector_i) #accuracy計算
-                result_frac.append(mean_i)
+                result_mask.append(mean_i)
 
-            result_list.append([frac]+result_frac)
+            result_list.append([mask_size]+result_mask)
 
             result_table=pd.DataFrame(
                 result_list,
-                columns=["frac"]+list(range(10)),
+                columns=["mask_size"]+list(range(10)),
             )
             print(result_table)
             result_table.to_csv(f"{save_dir}/result.csv",encoding="utf-8_sig",index=False)
@@ -190,14 +243,14 @@ def main():
     mu=np.mean(  np.array(result_list)[:,1:],axis=1)
     sigma=np.std(np.array(result_list)[:,1:],axis=1)
     plt.plot(
-        result_table["frac"].values,mu,marker="o",color="blue",label=args.net_type
+        result_table["mask_size"].values,mu,marker="o",color="blue",label=args.net_type
     )
     plt.fill_between(
-        x=result_table["frac"].values.flatten(),
+        x=result_table["mask_size"].values.flatten(),
         y1=mu-sigma,y2=mu+sigma,
         color="blue",alpha=0.5
     )
-    plt.xlabel("finger pressure scale")  # xラベルをsensor numに設定
+    plt.xlabel("mask size")  # xラベルをsensor numに設定
     plt.ylabel("accuracy")  # yラベルをaccuracyに設定
     plt.legend()  # legendを表示
     plt.ylim([0,1.2])

@@ -1,4 +1,3 @@
-# models
-conv2dはシンプルなConv2dになっている。  
-なぜなら、Inception-v2のSNNではmax92%までしか精度が出なかったから。  
-今後、ここのモデルを強化したほうが良いと思われる。  
+32x32で学習。
+snnはpoisson encoderを設定
+simple conv2d

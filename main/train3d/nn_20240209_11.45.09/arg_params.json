@@ -1,0 +1,9 @@
+﻿{
+    "net_type": "nn",
+    "save_dir": "nn",
+    "save_interval_iteration": 100,
+    "memo": "train_using32x32:simple_conv2d:nrm",
+    "snn_steps": 16,
+    "snn_threshold": 0.3,
+    "train_data_dir": "/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/data_collection/test_data_32x32/3d_data"
+}

@@ -14,12 +14,12 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
-import snntorch as snn
-from snntorch import surrogate
-from snntorch import backprop
-from snntorch import functional as SF
-from snntorch import utils
-from snntorch import spikeplot as splt
+# import snntorch as snn
+# from snntorch import surrogate
+# from snntorch import backprop
+# from snntorch import functional as SF
+# from snntorch import utils
+# from snntorch import spikeplot as splt
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import ArtistAnimation as arani
@@ -70,6 +70,32 @@ class DataTransformStd():
         
         return data_nrm,mean,std
 
+class DataTransformNrm():
+    """
+    ２次元データ（画像と同じ次元）をリサイズ＆正規化するクラス
+    """
+        
+    def __call__(self,data,size=(28,28),max=None,min=None):
+        """
+        :param data: [N x C x H x W]
+        :param size: 変換後のサイズ
+        :return data_nrm, max, min
+        """
+        
+        if not torch.is_tensor(data):
+            data=torch.Tensor(data)
+        
+        if max is None and min is None:
+            max=torch.max(data)
+            min=torch.min(data)
+            
+        data_nrm=F.interpolate(
+            torch.Tensor((data-min)/(1e-20+max)),
+            size,mode='area'
+        )
+        
+        return data_nrm,max,min
+
 
 def main():
     parser=argparse.ArgumentParser()
@@ -79,7 +105,12 @@ def main():
     args=parser.parse_args()
 
 
-    MODEL_DIR=f"{str(PARENT.parent)}/models/simple_conv2d_"+args.net_type
+    if args.net_type=="snn".casefold():
+        MODEL_DIR="/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/train3d/snn_20240209_17.48.54"
+    # MODEL_DIR=f"{str(PARENT.parent)}/models/simple_conv2d_"+args.net_type
+    else:
+        MODEL_DIR="/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/train3d/nn_20240209_19.33.35"
+
 
     var_sensornum_data=[]
     # data_dirs=os.listdir(args.data_dir)
@@ -99,7 +130,9 @@ def main():
         # >> データのリサイズと標準化 >>
         mean,std=pd.read_csv(f"{MODEL_DIR}/std_param.csv").values[0]
         data_size=(64,64) #28, 64
-        transform=DataTransformStd()
+        # transform=DataTransformStd()
+        transform=DataTransformNrm()
+
         n,t,c,h,w=input_data.shape
         input_data_nrm,mean,std=transform(input_data.reshape(n*t,c,h,w),data_size,mean,std)
         input_data_nrm=input_data_nrm.view(n,t,c,data_size[0],data_size[1])
@@ -113,7 +146,7 @@ def main():
     train_param={}
     with open(f"{MODEL_DIR}/train_param.txt", "r") as f:
         for line in f.readlines():
-            key,val=line.replace("\n","").split(":")
+            key,val=line.replace("\n","").split(":",1)
             train_param[key]=val
     # print(train_param)
 
@@ -185,6 +218,20 @@ def main():
             print(result_table)
             result_table.sort_values(by=["sensor_size"],inplace=True)
             result_table.to_csv(f"{save_dir}/result.csv",encoding="utf-8_sig",index=False)
+
+
+            # アニメーション用の図と軸を準備
+            fig, ax = plt.subplots()
+            # アニメーションに追加するイメージのリストを作成
+            images = []
+            for i in range(t):  # tはタイムステップの数
+                img = ax.imshow(np.fliplr(data['input_data_nrm'][0, i, 0].to("cpu").numpy()), animated=True,norm=Normalize(vmin=0, vmax=1))
+                images.append([img])
+            # ArtistAnimationのインスタンスを作成
+            ani = arani(fig, images, interval=50, blit=True, repeat_delay=1000)
+            # アニメーションを.mp4ファイルとして保存
+            ani.save(f"{PARENT}/result/{args.net_type}/inputdata_sensorsize{data['sensor_size']}.mp4", dpi=200)
+            plt.close()
 
 
     mu=np.mean(np.array(result_table.values)[:,1:],axis=1)

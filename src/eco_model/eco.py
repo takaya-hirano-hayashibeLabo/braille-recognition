@@ -65,7 +65,25 @@ class ECOSNN(nn.Module):
         """
 
         n,c,h,w=x.shape
-        out=x.repeat(self.snn_time_step,1,1,1).view(self.snn_time_step,n,c,h,w) #direct input
+        # out=x.repeat(self.snn_time_step,1,1,1).view(self.snn_time_step,n,c,h,w) #direct input
+
+        # >> poisson_encoder >>
+        out=[torch.where(
+            torch.rand(size=x.shape)<=x,
+            1,
+            0
+        ) for _ in range(self.snn_time_step)]
+        out=torch.stack(out).type(torch.float)
+
+        # outの1バッチ目の平均を取る
+        # import matplotlib.pyplot as plt
+        # import numpy as np
+        # batch1_mean = torch.mean(out[:, 13, :, :, :], dim=0)       
+        # plt.imshow(np.fliplr(batch1_mean[0].cpu().detach().numpy()))  # CPUに移動し、NumPy配列に変換
+        # plt.savefig('batch2_first_image.png')  # 画像を保存
+        # exit(1)
+        
+        # >> poisson_encoder >>
 
         return out
     

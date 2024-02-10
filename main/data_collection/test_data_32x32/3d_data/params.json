@@ -1,0 +1,7 @@
+{
+    "dot_shape": "default",
+    "start_time": 8.4,
+    "end_time": 11.0,
+    "save_dir": "test_data_32x32/3d_data",
+    "data_dir": "test_data_32x32/original"
+}

@@ -16,7 +16,7 @@ torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
 import snntorch as snn
 from snntorch import surrogate
-from snntorch import backprop
+# from snntorch import backprop
 from snntorch import functional as SF
 from snntorch import utils
 from snntorch import spikeplot as splt
@@ -142,6 +142,7 @@ def main():
     parser.add_argument("--memo",default="",type=str)
     parser.add_argument("--snn_steps",default=16,type=int)
     parser.add_argument("--snn_threshold",default=0.3,type=float)
+    parser.add_argument("--train_data_dir",type=str)
     args=parser.parse_args()
 
 
@@ -149,12 +150,12 @@ def main():
     skip_n=2 #データが多すぎるので多少スキップする
     train_size_rate=0.8
     batch_size=32
-    lr=1e-3
-    num_epochs = 1000
+    lr=1e-4
+    num_epochs = 500
     #>> パラメータの設定 >>
 
     
-    data_dir=f"{ROOT}/main/data_collection/train_data/3d_data"
+    data_dir=args.train_data_dir
     input_data:np.ndarray=np.load(f"{data_dir}/input_3d.npy")
     # input_data=input_data[::skip_n,:,np.newaxis,:,:] #channel方向に次元を伸ばす
     input_data=input_data[:,:,np.newaxis,:,:] #channel方向に次元を伸ばす
@@ -165,11 +166,14 @@ def main():
 
     # >> データのリサイズと標準化 >>
     data_size=(64,64) #28, 64
-    transform=DataTransformStd()
     n,t,c,h,w=input_data.shape
-    input_data_nrm,mean,std=transform(input_data.reshape(n*t,c,h,w),data_size)
+    # transform=DataTransformStd()
+    # input_data_nrm,mean,std=transform(input_data.reshape(n*t,c,h,w),data_size)
+    transform=DataTransformNrm()
+    input_data_nrm,max,min=transform(input_data.reshape(n*t,c,h,w),data_size,max=0.015,min=0)
     input_data_nrm=input_data_nrm.view(n,t,c,data_size[0],data_size[1])
     # >> データのリサイズと標準化 >>
+
     
     #>> データのシャッフルと分割 >>
     train_size=round(train_size_rate*input_data.shape[0]) #学習データのサイズ
@@ -206,7 +210,16 @@ def main():
     save_dir=f"{PARENT}/{args.save_dir}_{datetime.now().strftime('%Y%m%d_%H.%M.%S')}"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-        
+
+    with open(f"{save_dir}/std_param.csv","w") as f:
+        lines=f"max,min\n{max},{min}"
+        # lines=f"mean,std\n{mean.item()},{std.item()}"
+        f.write(lines)
+
+    with open(f"{save_dir}/arg_params.json","w",encoding="utf-8_sig") as f:
+        import json
+        json.dump(args.__dict__,f,indent=4)
+            
     optimizer=torch.optim.Adam(net.parameters(),lr=lr)
     optimizer.param_groups[0]["capturable"]=True
     loss_hist = []
@@ -285,11 +298,6 @@ def main():
                     torch.save(net.state_dict(),f"{save_dir}/model_iter{counter}.pth")
             counter += 1
 
-        
-    
-    with open(f"{save_dir}/std_param.csv","w") as f:
-        lines=f"mean,std\n{mean.item()},{std.item()}"
-        f.write(lines)
             
     # Plot Loss
     fig = plt.figure(facecolor="w")

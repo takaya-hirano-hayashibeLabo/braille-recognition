@@ -9,10 +9,10 @@ from torch import nn
 
 import snntorch as snn
 from snntorch import surrogate
-from snntorch import backprop
-from snntorch import functional as SF
-from snntorch import utils
-from snntorch import spikeplot as splt
+# from snntorch import backprop
+# from snntorch import functional as SF
+# from snntorch import utils
+# from snntorch import spikeplot as splt
 
 
 class InceptionV2SNN(nn.Module):
@@ -31,15 +31,15 @@ class InceptionV2SNN(nn.Module):
         self.net=nn.Sequential(
             nn.Conv2d(1, 8, kernel_size=3,stride=1,padding=1),
             nn.BatchNorm2d(8,eps=1e-5,),
-            nn.MaxPool2d(2),
+            nn.AvgPool2d(2),
             snn.Leaky(beta=0.5, spike_grad=spike_grad, init_hidden=True,threshold=snn_threshold),
             nn.Conv2d(8, 16, kernel_size=3,stride=1,padding=1),
             nn.BatchNorm2d(16,eps=1e-5,),
-            nn.MaxPool2d(2),
+            nn.AvgPool2d(2),
             snn.Leaky(beta=0.5, spike_grad=spike_grad, init_hidden=True,threshold=snn_threshold),
             nn.Conv2d(16, 32, kernel_size=3,stride=1,padding=1),
             nn.BatchNorm2d(32,eps=1e-5,),
-            nn.MaxPool2d(2),
+            nn.AvgPool2d(2),
             snn.Leaky(beta=0.5, spike_grad=spike_grad, init_hidden=True,threshold=snn_threshold,output=True),
             )
 

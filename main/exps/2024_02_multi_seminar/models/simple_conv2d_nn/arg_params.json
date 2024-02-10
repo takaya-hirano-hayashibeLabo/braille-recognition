@@ -1,0 +1,9 @@
+﻿{
+    "net_type": "nn",
+    "save_dir": "nn",
+    "save_interval_iteration": 100,
+    "memo": "train_using32x32:nrm:avgpool",
+    "snn_steps": 16,
+    "snn_threshold": 0.3,
+    "train_data_dir": "/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/data_collection/various_sensornum_data/data3d/data_32x32_sensor_grid"
+}
