@@ -32,4 +32,4 @@ plt.ylabel('Average Accuracy')
 plt.legend()
 
 # グラフを表示
-plt.savefig(Path(__file__).parent/f"view_score.png")
+plt.savefig(Path(__file__).parent/f"result/view_score.png")

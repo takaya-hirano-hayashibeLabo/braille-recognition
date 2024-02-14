@@ -18,12 +18,12 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
-import snntorch as snn
-from snntorch import surrogate
-from snntorch import backprop
-from snntorch import functional as SF
-from snntorch import utils
-from snntorch import spikeplot as splt
+# import snntorch as snn
+# from snntorch import surrogate
+# from snntorch import backprop
+# from snntorch import functional as SF
+# from snntorch import utils
+# from snntorch import spikeplot as splt
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import ArtistAnimation as arani
@@ -111,8 +111,8 @@ def main():
     parser.add_argument("--mask_size_diff",default=1,type=int)
     args=parser.parse_args()
 
-    # MODEL_DIR=f"{str(PARENT.parent)}/models/simple_conv2d_"+args.net_type
-    MODEL_DIR="/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/train3d/snn_20240209_17.48.54"
+    MODEL_DIR=f"{str(PARENT.parent)}/models/simple_conv2d_"+args.net_type
+    # MODEL_DIR="/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/train3d/snn_20240209_17.48.54"
     # MODEL_DIR="/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/train3d/nn_20240209_17.36.06"
 
     #>> 学習パラメータの読み込み >>

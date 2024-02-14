@@ -1,8 +1,9 @@
 ﻿{
     "net_type": "nn",
-    "model_name": "model_iter15000",
+    "model_name": "model_iter12000",
     "data_dir": "/mnt/ssd1/hiranotakaya/master/dev/braille-recognition/main/data_collection/test_data_32x32/3d_data",
-    "mask_size_min": 0,
-    "mask_size_max": 30,
-    "mask_size_diff": 2
+    "mask_size": 1,
+    "mask_rate_min": 0.0,
+    "mask_rate_max": 1.0,
+    "mask_rate_diff": 0.02
 }
